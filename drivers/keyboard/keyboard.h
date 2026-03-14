@@ -5,6 +5,6 @@ extern char keyboard_map[128];
 extern char keyboard_buffer[256];
 extern int buffer_idx;
 
-void check_key();
+void keyboard_handler();
 
 #endif

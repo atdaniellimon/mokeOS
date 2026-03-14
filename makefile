@@ -2,7 +2,6 @@
 
 UNAME_S := $(shell uname -s 2>/dev/null || echo Unknown)
 
-# Prefer bare-metal cross tools; on Linux fall back to distro cross/native tools.
 ifeq ($(UNAME_S),Linux)
 	OS_CFLAGS := -fno-stack-protector -fno-pie -fno-pic -mno-mmx -mno-sse -mno-sse2 -mno-80387 -msoft-float -fno-tree-vectorize
 	ifneq ($(shell command -v i686-elf-gcc 2>/dev/null),)
@@ -40,7 +39,11 @@ OBJS = boot.o \
 	   arch/i386/io.o \
 	   lib/string/string.o \
 	   lib/shell/shell.o \
-	   drivers/hardware/hardware.o
+	   drivers/hardware/hardware.o \
+	   arch/i386/idt.o \
+       arch/i386/idt_asm.o \
+	   lib/timer/timer.o \
+	   lib/date/date.o
 
 OUTPUT = mokeos.bin
 
@@ -51,6 +54,9 @@ $(OUTPUT): $(OBJS)
 
 boot.o: boot.s
 	$(AS) -f elf32 boot.s -o boot.o
+
+arch/i386/idt_asm.o: arch/i386/idt.asm
+	$(AS) -f elf32 arch/i386/idt.asm -o arch/i386/idt_asm.o
 
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(ARCH_CFLAGS) $(OS_CFLAGS)
