@@ -1,0 +1,10 @@
+#ifndef KEYBOARD_H
+#define KEYBOARD_H
+
+extern char keyboard_map[128];
+extern char keyboard_buffer[256];
+extern int buffer_idx;
+
+void check_key();
+
+#endif
