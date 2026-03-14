@@ -28,10 +28,12 @@ void check_key(){
         
         if(c){
             if(c == 8 && screen_byte > 0){
-                screen_byte -= 2;
-                video_mem[screen_byte] = ' ';
-                video_mem[screen_byte + 1] = current_colour;
-                if(buffer_idx > 0) buffer_idx--;
+                  if(buffer_idx > 0){
+                    screen_byte -= 2;
+                    video_mem[screen_byte] = ' ';
+                    video_mem[screen_byte + 1] = current_colour;
+                    buffer_idx--;
+				  }				
             } else if(c == '\n'){
                 keyboard_buffer[buffer_idx] = '\0';
                 k_print("\n");
