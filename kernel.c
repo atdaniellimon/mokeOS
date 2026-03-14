@@ -13,4 +13,3 @@ void main(void* mbi){
 
     for(;;) { asm volatile("hlt"); }
 }
-//qemu-system-i386 -kernel mokeos.bin

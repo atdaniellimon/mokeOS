@@ -1,11 +1,11 @@
 ENTRY(_start)
 SECTIONS
 {
-    . = 1M; /* El kernel empieza en 1MB */
+    . = 1M;
 
     .text BLOCK(4K) : ALIGN(4K)
     {
-        *(.multiboot) /* Forzamos el header al inicio */
+        *(.multiboot)
         *(.text)
     }
 
