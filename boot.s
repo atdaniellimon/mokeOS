@@ -1,5 +1,5 @@
 MBOOT_MAGIC    equ 0x1BADB002
-MBOOT_FLAGS    equ 0x00000005
+MBOOT_FLAGS    equ 0x00000007
 MBOOT_CHECKSUM equ -(MBOOT_MAGIC + MBOOT_FLAGS)
 
 section .multiboot
@@ -7,11 +7,7 @@ align 4
     dd MBOOT_MAGIC
     dd MBOOT_FLAGS
     dd MBOOT_CHECKSUM
-    dd 0
-    dd 0
-    dd 0
-    dd 0
-    dd 0 
+    dd 0, 0, 0, 0, 0 
     dd 0
     dd 1024
     dd 768
@@ -25,7 +21,9 @@ _start:
     cli
     mov esp, stack_space + 8192
     push ebx
+    push eax
     call main
+    
 
 halt:
     hlt
