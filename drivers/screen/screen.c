@@ -7,11 +7,11 @@ int screen_byte = 0;
 
 
 void scroll(){
-    for(int i = 160; i < 4000; i++) {
+    for(int i = 160; i < 4000; i++){
         video_mem[i - 160] = video_mem[i];
     }
 
-    for(int i = 3840; i < 4000; i += 2) {
+    for(int i = 3840; i < 4000; i += 2){
         video_mem[i] = ' ';
         video_mem[i + 1] = current_colour;
     }
@@ -46,27 +46,27 @@ void k_print(char *message){
     }
 }
 
-void k_print_at(char *mensaje, int x, int y){
+void k_print_at(char *message, int x, int y){
     int position = (y * 160) + (x * 2);
-    for(int j = 0; mensaje[j] != '\0'; j++){
+    for(int j = 0; message[j] != '\0'; j++){
         if(position >= 4000){
             scroll();
         }
-        if(mensaje[j] == ' '){
+        if(message[j] == ' '){
             video_mem[position] = ' ';
             video_mem[position +1] = current_colour;
 
             position += 2;
             continue;
         }
-        if(mensaje[j] == '\n'){
+        if(message[j] == '\n'){
             position = position / 160;
             position = position + 1;
             position = position * 160;
             
             continue;
         }
-        video_mem[position] = mensaje[j];
+        video_mem[position] = message[j];
         position++;
         video_mem[position] = current_colour;
         position++;

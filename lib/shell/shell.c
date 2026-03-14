@@ -28,7 +28,7 @@ void power(char* options){
     }
 }
 
-char* get_argument(char* full_command) {
+char* get_argument(char* full_command){
     int i = 0;
     while (full_command[i] != '\0') {
         if (full_command[i] == ' ') {
@@ -39,7 +39,7 @@ char* get_argument(char* full_command) {
     return 0;
 }
 
-void print_ram(void* mbi) {
+void print_ram(void* mbi){
     char ram_info[32];
     get_ram(mbi, ram_info); 
     k_print(ram_info);
@@ -67,7 +67,7 @@ void exec_command(char* command){
     } else if(sameas(command, "halt")){
         k_print("System returned with 0 code.");
         asm volatile("hlt"); 
-    } else if (sameas(command, "colour")) {
+    } else if(sameas(command, "colour")){
         char* arg = get_argument(command);
         
         if (arg == 0) {
