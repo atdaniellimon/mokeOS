@@ -9,5 +9,7 @@ extern int month;
 extern int year;
 
 void get_date();
+void set_time(int h, int m, int s);
+void set_date(int day, int month, int year);
 
 #endif

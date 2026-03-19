@@ -3,5 +3,6 @@
 
 int sameas(char *buffer, char *cmd_name);
 void into_string(unsigned int n, char* buffer);
+int toint(char* str);
 
 #endif
