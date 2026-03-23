@@ -1,5 +1,6 @@
 #include "keyboard.h"
 #include "../../lib/shell/shell.h"
+#include "../vbe/vbe.h"
 #include "../screen/screen.h"
 #include "../../arch/i386/io.h"
 
@@ -37,7 +38,7 @@ void keyboard_handler(){
         return;
     }
 
-    if(key_states[scancode] != 0) {
+    if(key_states[scancode] != 0){
         outb(0x20, 0x20);
         return;
     }
@@ -47,13 +48,15 @@ void keyboard_handler(){
     if(c){
         if(c == 0x3A){
             isShift = !isShift;
-        } else if(c == 8 && screen_byte > 0){
+        } else if(c == 8){
             if(buffer_idx > 0){
-                screen_byte -= 2;
-                video_mem[screen_byte] = ' ';
-                video_mem[screen_byte + 1] = current_colour;
                 buffer_idx--;
-            }             
+                cursor_x -= 8;
+                if(cursor_x < 0){
+                    cursor_x = 0;
+                }
+                draw_rect(cursor_x, cursor_y, 8, 8, background_colour);
+            }      
         } else if(c == '\n'){
             keyboard_buffer[buffer_idx] = '\0';
             k_print("\n");

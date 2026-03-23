@@ -1,74 +1,80 @@
 #include "screen.h"
-#define MAX_BYTES 4000
-#define LINE_SIZE 160
+#include "../vbe/vbe.h"
 
-char *video_mem = (char*) 0xB8000;
-char current_colour = 0x0F;
-char custom_colour = 0x0F;
+uint32_t current_colour = 0xFFFFFF;
+int background_colour = 0x000000;
+uint32_t custom_colour = 0xFFFFFF;
 int screen_byte = 0;
+int cursor_x = 1;
+int cursor_y = 1;
+uint32_t colour_map[] = {
+    0x000000,
+    0x0000AA,
+    0x00AA00,
+    0x00AAAA,
+    0xAA0000,
+    0xAA00AA,
+    0xFFFFFF,
+};
 
 
 void scroll(){
-    for(int i = LINE_SIZE; i < MAX_BYTES; i++){
-        video_mem[i - LINE_SIZE] = video_mem[i];
+    int row_height = 8;
+    
+    for(int y = row_height; y < (int)fb.height; y++){
+        for(int x = 0; x < (int)fb.width; x++){
+            fb.addr[(y - row_height) * (fb.pitch/4) + x] = fb.addr[y * (fb.pitch/4) + x];
+        }
     }
 
-    for(int i = MAX_BYTES - LINE_SIZE; i < MAX_BYTES; i += 2){
-        video_mem[i] = ' ';
-        video_mem[i + 1] = current_colour;
+    // limpiar última fila
+    for(int x = 0; x < (int)fb.width; x++){
+        fb.addr[(fb.height - row_height) * (fb.pitch/4) + x] = background_colour;
     }
 
-    screen_byte = MAX_BYTES - LINE_SIZE;
+    cursor_y -= row_height;
 }
 
-void k_print(char *message){
-    unsigned char *content = (unsigned char *)message;
-    for(int j = 0; content[j] != '\0'; j++){
-        if(screen_byte >= MAX_BYTES){
+void k_print(char* message){
+    for(int i = 0; message[i] != '\0'; i++){
+        if(message[i] == '\n'){
+            cursor_x = 0;
+            cursor_y += 8;
+        } else {
+            draw_char(cursor_x, cursor_y, message[i], current_colour, background_colour);
+            cursor_x += 8;
+            if(cursor_x >= (int)fb.width){
+                cursor_x = 0;
+                cursor_y += 8;
+            }
+        }
+        if(cursor_y >= (int)fb.height - 8){
             scroll();
         }
-        if(content[j] == '\n'){
-            screen_byte = ((screen_byte / LINE_SIZE) + 1) * LINE_SIZE;
-            continue;
-        }
-        
-        video_mem[screen_byte++] = content[j];
-        video_mem[screen_byte++] = current_colour;
     }
 }
 
-void k_print_at(char *message, int x, int y){
-    int position = (y * LINE_SIZE) + (x * 2);
-
-    for(int j = 0; message[j] != '\0'; j++){
-        if(position >= MAX_BYTES){
-            scroll();
-            position -= LINE_SIZE;
-        }
-
-        if(message[j] == '\n'){
-            position = ((position / LINE_SIZE) + 1) * LINE_SIZE;
-            continue;
-        }
-
-        video_mem[position++] = message[j];
-        video_mem[position++] = current_colour;
+void k_print_at(char* message, int x, int y){
+    int offset = 0;
+    for(int i = 0; message[i] != '\0'; i++){
+        draw_char(x + offset, y, message[i], current_colour, background_colour);
+        offset += 8;
     }
 }
 
 void clean_screen(){
-    for(int i = 0; i < 4000; i += 2){
-        video_mem[i] = ' ';
-        video_mem[i + 1] = current_colour;
-    }
-    screen_byte = 0;
+    cursor_x = 1;
+    cursor_y = 1;
+    vbe_clear(0x000000);
 }
 
 
-void set_colour(char colour){
-    if(colour == 0 || !colour){
-        current_colour = 0x0F;
+void set_colour(unsigned char colour){
+    if(colour == 0){
+        current_colour = 0xFFFFFF;
+    } else if(colour < 7){
+        current_colour = colour_map[colour];
     } else {
-        current_colour = colour;
+        current_colour = 0xFFFFFF;
     }
 }

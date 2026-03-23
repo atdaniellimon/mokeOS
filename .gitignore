@@ -2,3 +2,6 @@
 i.sh
 *.o
 mokeos.bin
+.gitignore
+isodir/
+mokeos.iso

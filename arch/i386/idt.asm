@@ -8,17 +8,48 @@ extern timer_handler
 idt_load:
     mov eax, [esp+4]
     lidt [eax]
-    sti
+    ;sti
     ret
 
 isr_timer:
     pusha
     call timer_handler
+    mov al, 0x20
+    out 0x20, al
     popa
     iret
 
 isr_keyboard:
     pusha
     call keyboard_handler
+    mov al, 0x20
+    out 0x20, al
+    popa
+    iret
+
+global isr_default
+isr_default:
+    cli
+    hlt
+    jmp $
+
+global isr_exception
+extern exception_handler
+
+isr_exception:
+    pusha
+    call exception_handler
+    popa
+    add esp, 4
+    iret
+
+global isr_mouse
+extern mouse_handler
+isr_mouse:
+    pusha
+    call mouse_handler
+    mov al, 0x20
+    out 0xA0, al   ; ← EOI al PIC esclavo primero
+    out 0x20, al   ; ← EOI al PIC maestro después
     popa
     iret

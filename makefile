@@ -43,7 +43,12 @@ OBJS = boot.o \
 	   arch/i386/idt.o \
        arch/i386/idt_asm.o \
 	   lib/timer/timer.o \
-	   lib/date/date.o
+	   lib/date/date.o \
+	   drivers/vbe/vbe.o \
+       drivers/vbe/font.o \
+	   arch/i386/gdt.o \
+	   arch/i386/gdt_asm.o \
+	   drivers/mouse/ps2.o
 
 OUTPUT = mokeos.bin
 
@@ -57,6 +62,9 @@ boot.o: boot.s
 
 arch/i386/idt_asm.o: arch/i386/idt.asm
 	$(AS) -f elf32 arch/i386/idt.asm -o arch/i386/idt_asm.o
+
+arch/i386/gdt_asm.o: arch/i386/gdt.asm
+	$(AS) -f elf32 arch/i386/gdt.asm -o arch/i386/gdt_asm.o
 
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(ARCH_CFLAGS) $(OS_CFLAGS)
