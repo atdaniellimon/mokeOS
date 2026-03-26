@@ -30,9 +30,8 @@ void pic_init(){
     outb(0x21, 0x01);
     outb(0xA1, 0x01);
     
-    // máscaras — habilitar solo IRQ0, IRQ1 e IRQ12
-    outb(0x21, 0xFC);  // 11111100 → IRQ0 e IRQ1
-    outb(0xA1, 0xEF);  // 11101111 → IRQ12
+    outb(0x21, 0xFC);
+    outb(0xA1, 0xEF);
 }
 
 void exception_handler(){

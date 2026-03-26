@@ -32,23 +32,23 @@ AS := nasm
 
 CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-OBJS = boot.o \
-       kernel.o \
-	   drivers/screen/screen.o \
-	   drivers/keyboard/keyboard.o \
-	   arch/i386/io.o \
-	   lib/string/string.o \
-	   lib/shell/shell.o \
-	   drivers/hardware/hardware.o \
-	   arch/i386/idt.o \
-       arch/i386/idt_asm.o \
-	   lib/timer/timer.o \
-	   lib/date/date.o \
-	   drivers/vbe/vbe.o \
-       drivers/vbe/font.o \
-	   arch/i386/gdt.o \
-	   arch/i386/gdt_asm.o \
-	   drivers/mouse/ps2.o
+OBJS = boot.o 						\
+       kernel.o 					\
+	   lib/string/string.o  		\
+	   lib/shell/shell.o 			\
+	   lib/timer/timer.o 			\
+	   lib/date/date.o 				\
+	   drivers/hardware/hardware.o 	\
+	   drivers/vbe/vbe.o 			\
+       drivers/vbe/font.o 			\
+	   drivers/mouse/ps2.o 			\
+	   drivers/screen/screen.o 		\
+	   drivers/keyboard/keyboard.o 	\
+	   arch/i386/gdt.o 				\
+	   arch/i386/gdt_asm.o			\
+	   arch/i386/idt.o 				\
+       arch/i386/idt_asm.o 			\
+	   arch/i386/io.o
 
 OUTPUT = mokeos.bin
 

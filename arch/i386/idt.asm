@@ -29,9 +29,12 @@ isr_keyboard:
 
 global isr_default
 isr_default:
-    cli
-    hlt
-    jmp $
+    push eax
+    mov al, 0x20
+    out 0x20, al   ; EOI maestro
+    out 0xA0, al   ; EOI esclavo
+    pop eax
+    iret
 
 global isr_exception
 extern exception_handler

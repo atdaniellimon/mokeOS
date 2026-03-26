@@ -37,8 +37,8 @@ void power(char* options){
 
 char* get_argument(char* full_command){
     int i = 0;
-    while (full_command[i] != '\0'){
-        if (full_command[i] == ' '){
+    while(full_command[i] != '\0'){
+        if(full_command[i] == ' '){
             return &full_command[i + 1];
         }
         i++;
@@ -64,66 +64,68 @@ void tick_command(char* arg){
     int ticks = get_timer_ticks(); 
     char buf[32]; 
 
-    if (arg == 0 || sameas(arg, "-r")){ 
+    if(arg == 0 || sameas(arg, "-r")){ 
         into_string(ticks, buf); 
         k_print("Raw ticks: "); 
         k_print(buf); 
         k_print("\n"); 
-    }
-    else if (sameas(arg, "-s")){
+    } else if(sameas(arg, "-s")){
         int sec = ticks / 1000; 
         
         into_string(sec, buf); 
         k_print("Uptime (seconds): "); 
         k_print(buf);
         k_print("\n");
-    }
-    else if (sameas(arg, "-ms")){
+    } else if(sameas(arg, "-ms")){
         into_string(ticks, buf); 
         k_print("Uptime (ms): "); 
         k_print(buf);
         k_print("\n");
-    }
-    else if (sameas(arg, "-m")){
+    } else if(sameas(arg, "-m")){
         int min = ticks / (1000 * 60); 
         into_string(min, buf); 
         k_print("Uptime (minutes): "); 
         k_print(buf);
         k_print("\n");
-    }
-    else if (sameas(arg, "-h")){
+    } else if(sameas(arg, "-h")){
         int hr = ticks / (1000 * 60 * 60); 
         into_string(hr, buf); 
         k_print("Uptime (hours): "); 
         k_print(buf);
         k_print("\n");
-    }
-    else if (sameas(arg, "-mem")){
+    } else if(sameas(arg, "-mem")){
         char ram_info[32]; 
         get_ram(global_mbi_ptr, ram_info); 
         k_print("RAM total: "); 
         k_print(ram_info); 
         k_print("MB\n"); 
-    }
-    else if (sameas(arg, "-user")){
+    } else if(sameas(arg, "-user")){
         k_print("Current user: "); 
         k_print(current_user); 
         k_print("\n"); 
-    }
-    else if (sameas(arg, "-mode")){
-    char colour_buf[32]; 
-    into_string(custom_colour, colour_buf); 
-    k_print("Current text colour code: "); 
-    k_print(colour_buf); 
-    k_print("\n"); 
-    }
-else {
+    } else if(sameas(arg, "-mode")){
+        char colour_buf[32]; 
+        into_string(custom_colour, colour_buf); 
+        k_print("Current text colour code: "); 
+        k_print(colour_buf); 
+        k_print("\n"); 
+    } else {
         k_print("Unknown flag. Available flags: -r -s -ms -m -h -mem -user -mode\n"); 
-}    
+    }    
 }
 
 void print_moke_logo(){
     set_colour(0x01);
+
+    /*
+        This prints:
+
+        8b    d8  dP"Yb  88  dP 888888  dP"Yb  .dP"Y8
+        88b  d88 dP   Yb 88odP  88__   dP   Yb `Ybo."  
+        88YbdP88 Yb   dP 88"Yb  88""   Yb   dP o.`Y8b
+        88 YY 88  YbodP  88  Yb 888888  YbodP  8bodP'   
+    */
+
     k_print("8b    d8  dP\"Yb  88  dP 888888  dP\"Yb  .dP\"Y8  \n");
     k_print("88b  d88 dP   Yb 88odP  88__   dP   Yb `Ybo.\"    \n");
     k_print("88YbdP88 Yb   dP 88\"Yb  88\"\"   Yb   dP o.`Y8b  \n");
@@ -132,9 +134,14 @@ void print_moke_logo(){
 }
 
 void change_time(int h, int m, int s){
+    if(h > 23) h = 23;
+    if(m > 59) m = 59;
+    if(s > 59) s = 59;
+
     set_time(h, m, s);
 }
 void change_date(int day, int month, int year){
+    if(month > 12) month = 12;
     set_date(day, month, year);
 }
 
@@ -167,7 +174,7 @@ void exec_command(char* command){
         into_string(get_timer_ticks() / 1000, buf);
         k_print(buf); k_print("s\n");
 
-        // hora actual
+        // current hour
         set_colour(0x01);
         k_print("                                                ");
         set_colour(0x0F);
@@ -179,13 +186,13 @@ void exec_command(char* command){
         if(seconds < 10) k_print("0");
         into_string(seconds, buf); k_print(buf); k_print("\n");
 
-        // usuario
+        // user
         set_colour(0x01);
         k_print("                                                ");
         set_colour(0x0F);
         k_print(" User: "); k_print(current_user); k_print("\n");
 
-        // paleta de colores
+        // colour palette
         set_colour(0x0F);
         k_print("\n ");
         set_colour(0x00); k_print("\xDB\xDB");
@@ -449,6 +456,8 @@ void mokeUI(){
     draw_rect(1, 1, 1024, 768, rgb(99, 99, 156));
 
     draw_rect(1, 1, 1024, 30, rgb(221, 221, 221));
+    draw_rect(1, 31, 1024, 1, rgb(0, 0, 0));
+
     draw_string(10, 12, "moke", rgb(0, 0, 0), rgb(221, 221, 221));
     draw_string(52, 12, "Workspace", rgb(0, 0, 0), rgb(221, 221, 221));
     draw_string(134, 12, "File", rgb(0, 0, 0), rgb(221, 221, 221));
@@ -467,18 +476,22 @@ void init_shell(){
 
     set_colour(0x05);
     showShellText = 0;
-    //exec_command("sysfetch");
+    exec_command("sysfetch");
 
-    //set_colour(0);
-    //k_print("\n");
-    //set_colour(0x05);
+    set_colour(0);
+    k_print("\n");
+    set_colour(0x05);
 
-    //showShellText = 1;
+    showShellText = 1;
 
-    //k_print("mokeOS> ");
-    //set_colour(0);
-
+    k_print("mokeOS> ");
+    set_colour(0);
+    shell_initialized = 1;
+}
+void init_ux(){
+    clean_screen();
     mokeUI();
-
-    //shell_initialized = 1;
+}
+void start(){
+    init_ux();
 }

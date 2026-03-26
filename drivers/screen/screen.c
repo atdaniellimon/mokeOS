@@ -2,11 +2,11 @@
 #include "../vbe/vbe.h"
 
 uint32_t current_colour = 0xFFFFFF;
-int background_colour = 0x000000;
-uint32_t custom_colour = 0xFFFFFF;
-int screen_byte = 0;
-int cursor_x = 1;
-int cursor_y = 1;
+int background_colour   = 0x000000;
+uint32_t custom_colour  = 0xFFFFFF;
+int screen_byte         = 0;
+int cursor_x            = 1;
+int cursor_y            = 1;
 uint32_t colour_map[] = {
     0x000000,
     0x0000AA,
@@ -26,8 +26,6 @@ void scroll(){
             fb.addr[(y - row_height) * (fb.pitch/4) + x] = fb.addr[y * (fb.pitch/4) + x];
         }
     }
-
-    // limpiar última fila
     for(int x = 0; x < (int)fb.width; x++){
         fb.addr[(fb.height - row_height) * (fb.pitch/4) + x] = background_colour;
     }
