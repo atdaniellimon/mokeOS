@@ -7,9 +7,9 @@
 
 mouse_state_t mouse = {512, 384, 0, 0, 0};
 static int mouse_count = 0;
-
 static int mouse_cycle = 0;
 static uint8_t mouse_bytes[3];
+
 int last_x = 0;
 int last_y = 0;
 
