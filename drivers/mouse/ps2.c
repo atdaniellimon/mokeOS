@@ -5,19 +5,21 @@
 #include "../../arch/i386/io.h"
 #include "../../lib/string/string.h"
 
-mouse_state_t mouse = {512, 384, 0, 0, 0};
-static int mouse_count = 0;
+mouse_state_t mouse = {512, 384, 0, 0, 0, 0}; 
 static int mouse_cycle = 0;
 static uint8_t mouse_bytes[3];
 
-int last_x = 0;
-int last_y = 0;
-
 void draw_cursor(int x, int y) {
-    draw_rect(last_x, last_y, 8, 8, 0x000000);
-    draw_rect(x, y, 8, 8, 0xFF0000);
-    last_x = x;
-    last_y = y;
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            uint8_t color_type = mouse_design[i][j];
+            if (color_type == 1) {
+                put_pixel(x + j, y + i, rgb(255, 255, 255));
+            } else if (color_type == 2) {
+                put_pixel(x + j, y + i, rgb(0, 0, 0));
+            }
+        }
+    }
 }
 
 void ps2_wait_write() {
@@ -40,47 +42,43 @@ uint8_t mouse_read() {
 }
 
 void mouse_init() {
+    uint8_t status;
+
+    while(inb(0x64) & 1) { inb(0x60); }
+
     ps2_wait_write();
     outb(0x64, 0xA8);
+
+    ps2_wait_write();
+    outb(0x64, 0x20);
+    ps2_wait_read();
+    status = (inb(0x60) | 2);
+    status &= ~0x20;
     
     ps2_wait_write();
     outb(0x64, 0x60);
     ps2_wait_write();
-    outb(0x60, 0x47);
+    outb(0x60, status);
 
     mouse_write(0xF4);
     mouse_read();
-
-    while(inb(0x64) & 1) {
-        inb(0x60);
-    }
 }
 
-void mouse_handler(){
-    mouse_count++;
-    // dibuja el contador en esquina
-    char buf[12];
-    into_string(mouse_count, buf);
-    draw_rect(1, 750, 100, 18, 0x000000);
-    draw_string(1, 750, buf, 0xFF0000, 0x000000);
-
-    draw_rect(1, 750, 50, 18, 0xFF0000);
+void mouse_handler() {
     uint8_t status = inb(0x64);
-    if(!(status & 0x20)){  // bit 5 is mouse data
-        return;            // if is not mouse then ignore
-    }
     
+    if (!(status & 0x21)) return; 
+
     uint8_t data = inb(0x60);
     
-    if(mouse_cycle == 0 && !(data & 0x08)){
-        return;
-    }
+    if(mouse_cycle == 0 && !(data & 0x08)) return;
     
-    mouse_bytes[mouse_cycle] = data;
-    mouse_cycle++;
+    mouse_bytes[mouse_cycle++] = data;
 
-    if(mouse_cycle == 3){
+    if(mouse_cycle == 3) {
         mouse_cycle = 0;
+        mouse.last_left = mouse.left;
+
         mouse.left   = mouse_bytes[0] & 0x01;
         mouse.right  = mouse_bytes[0] & 0x02;
         mouse.middle = mouse_bytes[0] & 0x04;
@@ -96,6 +94,8 @@ void mouse_handler(){
         if(mouse.x > 1023) mouse.x = 1023;
         if(mouse.y > 767)  mouse.y = 767;
 
-        draw_cursor(mouse.x, mouse.y);
+        if (mouse.left && !mouse.last_left) {
+            on_mouse_click(mouse.x, mouse.y); 
+        }
     }
 }

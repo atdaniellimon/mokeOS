@@ -9,12 +9,15 @@ mokeOS Beta - Do not copy
 #include "../../drivers/hardware/hardware.h"
 #include "../timer/timer.h"
 #include "../date/date.h"
+#include "../../drivers/mouse/ps2.h"
+#include "../mokeUI/import.h"
 
 #define current_user "tester"
 
 int showShellText = 1;
 int cat_commands = 0;
 int shell_initialized = 0;
+int menu_moke_open = 0;
 
 void* global_mbi_ptr;
 
@@ -24,8 +27,8 @@ void power(char* options){
     
         do {
             temp = inb(0x64);
-            if (temp & 1) inb(0x60);
-        } while (temp & 2);
+            if(temp & 1) inb(0x60);
+        } while(temp & 2);
 
         outb(0x64, 0xFE);
     } else if(sameas(options, "off")){
@@ -452,15 +455,56 @@ void exec_cat_command(char* command){
     }
 }
 
+void toggle_moke_menu(){
+    menu_moke_open = !menu_moke_open;
+}
+void shell_reboot(){
+    power("reboot");
+}
+void shell_poweroff(){
+    power("off");
+}
+
 void mokeUI(){
     draw_rect(1, 1, 1024, 768, rgb(99, 99, 156));
 
-    draw_rect(1, 1, 1024, 30, rgb(221, 221, 221));
-    draw_rect(1, 31, 1024, 1, rgb(0, 0, 0));
+    UI_Container(((RectArgs){
+        .x = 1,
+        .y = 1,
+        .w = 1024,
+        .h = 30,
+        .bg = rgb(221, 221, 221),
+        .border = 0
+    }))
+    {
+        UI_btn((ButtonArgs){
+            .text = "moke",
+            .x = 8, .y = 1, .h = 29,
+            .padding = 11,
+            .fg = rgb(0, 0, 0), .bg = rgb(221, 221, 221),
+            .action = toggle_moke_menu
+        });
+        UI_btn((ButtonArgs){
+            .text = "Workspace",
+            .x = 52, .y = 1, .h = 29,
+            .padding = 11,
+            .fg = rgb(0, 0, 0), .bg = rgb(221, 221, 221)
+        });
 
-    draw_string(10, 12, "moke", rgb(0, 0, 0), rgb(221, 221, 221));
-    draw_string(52, 12, "Workspace", rgb(0, 0, 0), rgb(221, 221, 221));
-    draw_string(134, 12, "File", rgb(0, 0, 0), rgb(221, 221, 221));
+        UI_btn((ButtonArgs){
+            .text = "File",
+            .x = 134, .y = 1, .h = 29,
+            .padding = 11,
+            .fg = rgb(0, 0, 0), .bg = rgb(221, 221, 221),
+        });
+        UI_rect((RectArgs){
+            .bg = rgb(0, 0, 0),
+            .w = 1024,
+            .h = 1,
+            .x = 0,
+            .y = 30
+        });
+    }
 
     char buf[12];
     get_date();
@@ -469,6 +513,55 @@ void mokeUI(){
     draw_string(956, 12, ":", rgb(0, 0, 0), rgb(221, 221, 221));
     into_string(minutes, buf);
     draw_string(964, 12, buf, rgb(0, 0, 0), rgb(221, 221, 221));
+
+    if (menu_moke_open){
+        UI_Container(((RectArgs){
+            .x = 10,
+            .y = 35,
+            .w = 120,
+            .h = 100,
+            .bg = rgb(221, 221, 221),
+            .rBotL = 10, .rBotR = 10, .rTopL = 10, .rTopR = 10,
+            .border = 0
+        })) 
+        {
+            UI_btn((ButtonArgs){
+                .text = "About",
+                .x = 1, .y = 5, .w = 118,
+                .padding = 10,
+                .bg = rgb(221, 221, 221),
+                .rTopL = 10, .rTopR = 10,
+                .action = 0
+            });
+        
+            UI_btn((ButtonArgs){
+                .text = "Restart",
+                .x = 1, .y = 35, .w = 118,
+                .padding = 10,
+                .fg = rgb(0, 0, 0), .bg = rgb(221, 221, 221),
+                .action = shell_reboot
+            });
+        
+            UI_btn((ButtonArgs){
+                .text = "Power Off",
+                .x = 1, .y = 65, .w = 118,
+                .padding = 10,
+                .fg = rgb(0, 0, 0), .bg = rgb(221, 221, 221),
+                .action = shell_poweroff
+            });
+        }
+    }
+}
+
+
+void draw_ui_mouse(){
+    for(int i = 0; i < 16; i++){
+        for(int j = 0; j < 16; j++){
+            uint8_t p = mouse_design[i][j];
+            if(p == 1) put_pixel(mouse.x + j, mouse.y + i, 0xFFFFFF);
+            else if(p == 2) put_pixel(mouse.x + j, mouse.y + i, 0x000000);
+        }
+    }
 }
 
 void init_shell(){
@@ -488,10 +581,14 @@ void init_shell(){
     set_colour(0);
     shell_initialized = 1;
 }
-void init_ux(){
-    clean_screen();
-    mokeUI();
-}
-void start(){
-    init_ux();
+
+void start_shell(){
+    while(1){
+        clear_buttons();
+        mokeUI();
+        vbe_draw_cursor(mouse.x, mouse.y);
+        vbe_swap(); 
+        
+        asm volatile("hlt");
+    }
 }

@@ -9,6 +9,6 @@ extern void* global_mbi_ptr;
 void init_shell();
 void exec_command(char* command);
 void exec_cat_command(char* command);
-void start();
+void start_shell();
 
 #endif  

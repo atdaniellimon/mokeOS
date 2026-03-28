@@ -16,21 +16,18 @@ void idt_set_gate(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags){
 }
 
 void pic_init(){
-    // inicializar
     outb(0x20, 0x11);
     outb(0xA0, 0x11);
     
-    // remapear
     outb(0x21, 0x20);
     outb(0xA1, 0x28);
     
-    // configurar
     outb(0x21, 0x04);
     outb(0xA1, 0x02);
     outb(0x21, 0x01);
     outb(0xA1, 0x01);
     
-    outb(0x21, 0xFC);
+    outb(0x21, 0xF9); 
     outb(0xA1, 0xEF);
 }
 

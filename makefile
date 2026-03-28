@@ -38,6 +38,7 @@ OBJS = boot.o 						\
 	   lib/shell/shell.o 			\
 	   lib/timer/timer.o 			\
 	   lib/date/date.o 				\
+	   lib/mokeUI/import.o			\
 	   drivers/hardware/hardware.o 	\
 	   drivers/vbe/vbe.o 			\
        drivers/vbe/font.o 			\

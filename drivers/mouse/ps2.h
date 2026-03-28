@@ -3,13 +3,13 @@
 #include "../../lib/stdint/types.h"
 
 typedef struct {
-    int x;
-    int y;
-    uint8_t left;
-    uint8_t right;
-    uint8_t middle;
+    int x, y;
+    uint8_t left, right, middle;
+    uint8_t last_left;
 } mouse_state_t;
 
+
+extern uint8_t mouse_design[16][16];
 extern mouse_state_t mouse;
 
 void mouse_init();

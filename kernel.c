@@ -18,16 +18,15 @@ void main(void* mbi, unsigned int magic){
     global_mbi_ptr = mbi;
     
     asm volatile("cli");
-
     gdt_init();
     idt_init();
     disable_bios_cursor();
     vbe_init(mbi);
     timer_init(1000); 
-    mouse_init();
-
+    mouse_init(); 
     asm volatile("sti"); 
-    start();
+
+    start_shell();
 
     for(;;){ asm volatile("hlt"); }
 }

@@ -11,6 +11,8 @@ typedef struct {
     uint8_t   bpp;
 } framebuffer_t;
 
+
+
 void vbe_init(void* mbi);
 void put_pixel(int x, int y, uint32_t color);
 void draw_rect(int x, int y, int w, int h, uint32_t color);
@@ -21,5 +23,7 @@ extern framebuffer_t fb;
 uint32_t rgb(uint8_t r, uint8_t g, uint8_t b);
 uint32_t alpha_blend(uint32_t fg, uint32_t bg, uint8_t alpha);
 void draw_rect_alpha(int x, int y, int w, int h, uint32_t color, uint8_t alpha);
+void vbe_swap();
+void vbe_draw_cursor(int x, int y);
 
 #endif

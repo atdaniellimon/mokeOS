@@ -7,6 +7,25 @@
 #define PH(p) (fb.height * p / 100)
 
 framebuffer_t fb;
+static uint32_t back_buffer[1024 * 768];
+uint8_t mouse_design[16][16] = {
+    {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {1,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0},
+    {1,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0},
+    {1,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0},
+    {1,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0},
+    {1,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0},
+    {1,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0},
+    {1,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0},
+    {1,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0},
+    {1,2,2,2,2,1,1,1,1,1,1,0,0,0,0,0},
+    {1,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0},
+    {1,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0},
+    {1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+};
 
 void vbe_init(void* mbi_ptr){
     multiboot_info_t* mbi = (multiboot_info_t*)mbi_ptr;
@@ -18,11 +37,15 @@ void vbe_init(void* mbi_ptr){
     fb.bpp    = mbi->framebuffer_bpp;
 }
 
-void put_pixel(int x, int y, uint32_t colour){
-    if(x < 0 || x >= (int)fb.width)  return;
-    if(y < 0 || y >= (int)fb.height) return;
+void put_pixel(int x, int y, uint32_t color) {
+    if(x < 0 || x >= 1024 || y < 0 || y >= 768) return;
+    back_buffer[y * 1024 + x] = color;
+}
 
-    fb.addr[y * (fb.pitch / 4) + x] = colour;
+void vbe_swap() {
+    for (int i = 0; i < (1024 * 768); i++) {
+        fb.addr[i] = back_buffer[i];
+    }
 }
 
 void draw_rect(int x, int y, int w, int h, uint32_t colour){
@@ -37,21 +60,6 @@ uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
     return ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
-uint32_t alpha_blend(uint32_t fg, uint32_t bg, uint8_t alpha){
-    uint8_t fg_r = (fg >> 16) & 0xFF;
-    uint8_t fg_g = (fg >> 8)  & 0xFF;
-    uint8_t fg_b =  fg        & 0xFF;
-
-    uint8_t bg_r = (bg >> 16) & 0xFF;
-    uint8_t bg_g = (bg >> 8)  & 0xFF;
-    uint8_t bg_b =  bg        & 0xFF;
-
-    uint8_t r    = (fg_r * alpha + bg_r * (255 - alpha)) / 255;
-    uint8_t g    = (fg_g * alpha + bg_g * (255 - alpha)) / 255;
-    uint8_t b    = (fg_b * alpha + bg_b * (255 - alpha)) / 255;
-
-    return rgb(r, g, b);
-}
 
 void vbe_clear(uint32_t colour){
     draw_rect(0, 0, fb.width, fb.height, colour);
@@ -77,13 +85,15 @@ void draw_string(int x, int y, char* str, uint32_t fg, uint32_t bg){
         i++;
     }
 }
-
-void draw_rect_alpha(int x, int y, int w, int h, uint32_t colour, uint8_t alpha){
-    for(int row = y; row < y + h; row++) {
-        for(int col = x; col < x + w; col++) {
-            uint32_t bg     = fb.addr[row * (fb.pitch/4) + col];
-            uint32_t result = alpha_blend(colour, bg, alpha);
-            fb.addr[row * (fb.pitch/4) + col] = result;
+void vbe_draw_cursor(int x, int y){
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            uint8_t color_type = mouse_design[i][j];
+            if (color_type == 1) {
+                put_pixel(x + j, y + i, 0xFFFFFF); // Blanco
+            } else if (color_type == 2) {
+                put_pixel(x + j, y + i, 0x000000); // Negro
+            }
         }
     }
 }
