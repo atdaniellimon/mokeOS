@@ -8,8 +8,8 @@ typedef struct {
     uint8_t last_left;
 } mouse_state_t;
 
-
-extern uint8_t mouse_design[16][16];
+typedef void (*mouse_callback_t)(int x, int y, int buttons);
+void mouse_set_handler(mouse_callback_t handler);
 extern mouse_state_t mouse;
 
 void mouse_init();

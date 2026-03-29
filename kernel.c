@@ -7,6 +7,8 @@
 #include "lib/string/string.h"
 #include "drivers/keyboard/keyboard.h"
 #include "drivers/mouse/ps2.h"
+#include "lib/malloc/mem.h"
+#include "debug/mfs/moke.h"
 
 void disable_bios_cursor(){
     outb(0x3D4, 0x0A);
@@ -18,12 +20,16 @@ void main(void* mbi, unsigned int magic){
     global_mbi_ptr = mbi;
     
     asm volatile("cli");
+    heap_init();
     gdt_init();
+    ata_init();
+    mfs_mount();
     idt_init();
     disable_bios_cursor();
     vbe_init(mbi);
     timer_init(1000); 
     mouse_init(); 
+    keyboard_init();
     asm volatile("sti"); 
 
     start_shell();

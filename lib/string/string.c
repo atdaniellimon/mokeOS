@@ -46,3 +46,20 @@ int strlen(char* s){
     while (s[i] != '\0') i++;
     return i;
 }
+
+void* memcpy(void* dest, const void* src, int n){
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    for(int i = 0; i < n; i++){
+        d[i] = s[i];
+    }
+    return dest;
+}
+
+int strcmp(const char* s1, const char* s2){
+    while(*s1 && (*s1 == *s2)){
+        s1++;
+        s2++;
+    }
+    return *(unsigned char*)s1 - *(unsigned char*)s2;
+}

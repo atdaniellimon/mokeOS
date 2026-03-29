@@ -36,9 +36,11 @@ OBJS = boot.o 						\
        kernel.o 					\
 	   lib/string/string.o  		\
 	   lib/shell/shell.o 			\
+	   lib/shell/terminal.o 		\
 	   lib/timer/timer.o 			\
 	   lib/date/date.o 				\
 	   lib/mokeUI/import.o			\
+	   lib/malloc/mem.o				\
 	   drivers/hardware/hardware.o 	\
 	   drivers/vbe/vbe.o 			\
        drivers/vbe/font.o 			\
@@ -49,7 +51,8 @@ OBJS = boot.o 						\
 	   arch/i386/gdt_asm.o			\
 	   arch/i386/idt.o 				\
        arch/i386/idt_asm.o 			\
-	   arch/i386/io.o
+	   arch/i386/io.o				\
+	   debug/mfs/moke.o
 
 OUTPUT = mokeos.bin
 

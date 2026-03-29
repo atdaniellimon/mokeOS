@@ -5,9 +5,39 @@
 
 int ctx_x = 0;
 int ctx_y = 0;
+static int current_layer = LAYER_WALLPAPER;
+
+
+static MokeButton button_list[32];
+static int button_count = 0;
+
+void clear_buttons(){
+    button_count = 0;
+}
+
+void add_button(int x, int y, int w, int h, void (*action)()){
+    if(button_count < 32){
+        button_list[button_count].x = x;
+        button_list[button_count].y = y;
+        button_list[button_count].w = w;
+        button_list[button_count].h = h;
+        button_list[button_count].action = action;
+        button_count++;
+    }
+}
+
+void UI_process_click(int mx, int my){
+    for(int i = 0; i < button_count; i++){
+        if(mx >= button_list[i].x && mx <= (button_list[i].x + button_list[i].w) &&
+            my >= button_list[i].y && my <= (button_list[i].y + button_list[i].h)){
+            if(button_list[i].action) button_list[i].action();
+            return;
+        }
+    }
+}
 
 int is_border_pixel(int px, int py, int x, int y, int w, int h, ButtonArgs a){
-    if (px < x || px >= x + w || py < y || py >= y + h) {
+    if(px < x || px >= x + w || py < y || py >= y + h){
         return 0;
     }
 
@@ -26,14 +56,14 @@ int is_border_pixel(int px, int py, int x, int y, int w, int h, ButtonArgs a){
     }
 
     // Bottom Left
-    if (px < x + a.rBotL && py >= (y + h) - a.rBotL) { 
+    if(px < x + a.rBotL && py >= (y + h) - a.rBotL){ 
         int dx = (x + a.rBotL) - px;
         int dy = py - ((y + h) - a.rBotL);
         return (dx * dx + dy * dy <= a.rBotL * a.rBotL);
     }
 
     // Bottom Right
-    if (px >= (x + w) - a.rBotR && py >= (y + h) - a.rBotR) {
+    if(px >= (x + w) - a.rBotR && py >= (y + h) - a.rBotR){
         int dx = px - ((x + w) - a.rBotR);
         int dy = py - ((y + h) - a.rBotR);
         return (dx * dx + dy * dy <= a.rBotR * a.rBotR);
@@ -70,7 +100,13 @@ int is_pixel_inside_radius(int px, int py, int x, int y, int w, int h, ButtonArg
     return 1;
 }
 
+void set_layer(LayerID layer){
+    current_layer = layer;
+}
+
 void UI_btn(ButtonArgs args){
+    if(args.hidden == 1) return;
+    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
@@ -92,21 +128,31 @@ void UI_btn(ButtonArgs args){
         }
     }
 
-    draw_string(final_x + args.padding, final_y + args.padding, args.text, args.fg, args.bg);
+    if(args.textAlign == 1){
+        int text_width = strlen(args.text) * 8;
+        int center_x = final_x + (width / 2) - (text_width / 2);
+        int center_y = final_y + (height /2) - 4;
+        
+        draw_string(center_x, center_y, args.text, args.fg, args.bg);
+    } else {
+        draw_string(final_x + args.padding, final_y + args.padding, args.text, args.fg, args.bg);
+    }
     add_button(final_x, final_y, width, height, args.action);
 }
 
 void UI_rect(RectArgs args){
+    if(args.bg == 0) return;
+    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
-    for (int i = 0; i < args.h; i++){
-        for (int j = 0; j < args.w; j++){
+    for(int i = 0; i < args.h; i++){
+        for(int j = 0; j < args.w; j++){
             
             int px = final_x + j;
             int py = final_y + i;
 
-            if (is_pixel_inside_radius(px, py, final_x, final_y, args.w, args.h, (ButtonArgs){
+            if(is_pixel_inside_radius(px, py, final_x, final_y, args.w, args.h, (ButtonArgs){
                 .rTopL = args.rTopL, .rTopR = args.rTopR, 
                 .rBotL = args.rBotL, .rBotR = args.rBotR
             })){
@@ -117,6 +163,7 @@ void UI_rect(RectArgs args){
 }
 
 void UI_text(TextArgs args){
+    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
@@ -133,4 +180,12 @@ void UI_pop_context(int x, int y){
     // Reset to previous cords
     ctx_x -= x;
     ctx_y -= y;
+}
+
+void UI_hide(UI_component* c){
+    if(c) c->bounds.hidden = 1; 
+}
+
+void UI_show(UI_component* c){
+    if(c) c->bounds.hidden = 0; 
 }

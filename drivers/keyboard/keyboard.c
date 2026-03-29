@@ -1,13 +1,9 @@
 #include "keyboard.h"
-#include "../../lib/shell/shell.h"
+#include "../../lib/shell/terminal.h"
 #include "../vbe/vbe.h"
 #include "../screen/screen.h"
 #include "../../arch/i386/io.h"
-
-/*
-    Changelog:
-        - Added support for shift (Currently caps lock)
-*/
+#include "../../lib/malloc/mem.h"
 
 char keyboard_map[128] = {
     0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 8,
@@ -24,7 +20,8 @@ char shift_keyboard_map[128] = {
     '*', 0, ' '
 };
 
-char keyboard_buffer[1024];
+char* keyboard_buffer = 0;
+int buffer_size = 256;
 int buffer_idx = 0;
 int isShift = 0;
 
@@ -59,16 +56,27 @@ void keyboard_handler(){
             }      
         } else if(c == '\n'){
             keyboard_buffer[buffer_idx] = '\0';
-            k_print("\n");
-            if(shell_initialized == 1 && cat_commands == 0){
-                exec_command(keyboard_buffer);
-            } else if(cat_commands == 1 && shell_initialized == 0){
-                exec_cat_command(keyboard_buffer);
-            }
+            // k_print("\n");
+            // if(shell_initialized == 1 && cat_commands == 0){
+            //     exec_command(keyboard_buffer);
+            // } else if(cat_commands == 1 && shell_initialized == 0){
+            //     exec_cat_command(keyboard_buffer);
+            // }
             buffer_idx = 0;
-        } else if(buffer_idx < 1024 - 1){
+        } else if(buffer_idx < buffer_size - 1){
+            // if full, grow
+            if(buffer_idx >= buffer_size - 2){
+                char* new_buffer = (char*)kmalloc(buffer_size * 2);
+                // copy previous content
+                for(int i = 0; i < buffer_idx; i++){
+                    new_buffer[i] = keyboard_buffer[i];
+                }
+                kfree(keyboard_buffer);
+                keyboard_buffer = new_buffer;
+                buffer_size *= 2;
+            }
             char str[2] = {c, '\0'};
-            k_print(str);
+            (void)str;
             keyboard_buffer[buffer_idx] = c;
             buffer_idx++;
         }
@@ -76,4 +84,8 @@ void keyboard_handler(){
 
     key_states[scancode] = 1;
     outb(0x20, 0x20);
+}
+
+void keyboard_init(){
+    keyboard_buffer = (char*)kmalloc(buffer_size);
 }

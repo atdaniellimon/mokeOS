@@ -8,24 +8,6 @@
 
 framebuffer_t fb;
 static uint32_t back_buffer[1024 * 768];
-uint8_t mouse_design[16][16] = {
-    {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {1,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0},
-    {1,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0},
-    {1,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0},
-    {1,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0},
-    {1,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0},
-    {1,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0},
-    {1,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0},
-    {1,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0},
-    {1,2,2,2,2,1,1,1,1,1,1,0,0,0,0,0},
-    {1,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0},
-    {1,2,2,1,0,0,0,0,0,0,0,0,0,0,0,0},
-    {1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-};
 
 void vbe_init(void* mbi_ptr){
     multiboot_info_t* mbi = (multiboot_info_t*)mbi_ptr;
@@ -37,13 +19,22 @@ void vbe_init(void* mbi_ptr){
     fb.bpp    = mbi->framebuffer_bpp;
 }
 
-void put_pixel(int x, int y, uint32_t color) {
+void put_pixel(int x, int y, uint32_t color_raw){
     if(x < 0 || x >= 1024 || y < 0 || y >= 768) return;
-    back_buffer[y * 1024 + x] = color;
+
+    mcolor_t colour = {.raw = color_raw};
+
+    if(colour.channels.a == 255){
+        fb.addr[y * 1024 + x] = color_raw;
+    } 
+    else if(colour.channels.a > 0){
+        uint32_t bg = fb.addr[y * 1024 + x];
+        fb.addr[y * 1024 + x] = blend_colors(colour, bg);
+    }
 }
 
-void vbe_swap() {
-    for (int i = 0; i < (1024 * 768); i++) {
+void vbe_swap(){
+    for(int i = 0; i < (1024 * 768); i++){
         fb.addr[i] = back_buffer[i];
     }
 }
@@ -55,11 +46,6 @@ void draw_rect(int x, int y, int w, int h, uint32_t colour){
         }
     }
 }
-
-uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
-    return ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
-}
-
 
 void vbe_clear(uint32_t colour){
     draw_rect(0, 0, fb.width, fb.height, colour);
@@ -85,15 +71,19 @@ void draw_string(int x, int y, char* str, uint32_t fg, uint32_t bg){
         i++;
     }
 }
-void vbe_draw_cursor(int x, int y){
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
-            uint8_t color_type = mouse_design[i][j];
-            if (color_type == 1) {
-                put_pixel(x + j, y + i, 0xFFFFFF); // Blanco
-            } else if (color_type == 2) {
-                put_pixel(x + j, y + i, 0x000000); // Negro
-            }
-        }
-    }
+
+uint32_t blend_colors(mcolor_t front, uint32_t back_raw){
+    if (front.channels.a == 255) return front.raw;
+    if (front.channels.a == 0)   return back_raw;
+
+    mcolor_t back = {.raw = back_raw};
+    uint32_t alpha = front.channels.a;
+    uint32_t inv_alpha = 255 - alpha;
+
+    // Formula: (Front * Alpha + Background * (255 - Alpha)) / 255
+    uint8_t r = (uint8_t)((front.channels.r * alpha + back.channels.r * inv_alpha) >> 8);
+    uint8_t g = (uint8_t)((front.channels.g * alpha + back.channels.g * inv_alpha) >> 8);
+    uint8_t b = (uint8_t)((front.channels.b * alpha + back.channels.b * inv_alpha) >> 8);
+
+    return (r << 16) | (g << 8) | b;
 }

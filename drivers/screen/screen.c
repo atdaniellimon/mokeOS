@@ -17,33 +17,6 @@ uint32_t colour_map[] = {
     0xFFFFFF,
 };
 
-ui_button_t buttons[10]; 
-int button_count = 0;
-
-
-void clear_buttons(){
-    button_count = 0;
-}
-
-void add_button(int x, int y, int w, int h, void (*action)()){
-    if(button_count < 10){
-        buttons[button_count++] = (ui_button_t){x, y, w, h, action};
-    }
-}
-
-void on_mouse_click(int mx, int my){
-    for(int i = 0; i < button_count; i++){
-        if(mx >= buttons[i].x && mx <= (buttons[i].x + buttons[i].w) &&
-            my >= buttons[i].y && my <= (buttons[i].y + buttons[i].h)){
-            
-            if(buttons[i].callback != 0){
-                buttons[i].callback();
-            }
-            return; 
-        }
-    }
-}
-
 void scroll(){
     int row_height = 8;
     
