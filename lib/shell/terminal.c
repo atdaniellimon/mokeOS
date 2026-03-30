@@ -227,7 +227,6 @@ void exec_command(char* command){
         set_colour(0x0F);
     } else if(sameas(command, "reboot")){
         k_print("Preparing for reboot.");
-        sleep(500);
         power("reboot");
     } else if(sameas(command, "whoami")){
         k_print(current_user);
@@ -278,7 +277,6 @@ void exec_command(char* command){
         cat_commands = 0;
         showShellText = 0;
 
-        sleep(500);
         asm volatile("hlt"); 
     } else if(sameas(command, "colour")){
         char* arg = get_argument(command);
@@ -364,7 +362,6 @@ void exec_command(char* command){
             k_print("\n");
         } else if(sameas(command, "poweroff")){
             k_print("Preparing for shut down. \n");
-            sleep(500);
             power("off");
         } else if(sameas(command, "settime")){
             char* arg = get_argument(command);

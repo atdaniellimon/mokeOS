@@ -3,7 +3,6 @@ i.sh
 *.o
 mokeos.bin
 .gitignore
-isodir/
 mokeos.iso
 disk.img
 test.img

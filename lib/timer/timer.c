@@ -21,11 +21,3 @@ void timer_handler(){
 int get_timer_ticks(){
     return ticks;
 }
-
-void sleep(int ms){
-    int goal = get_timer_ticks() + ms;
-    while(get_timer_ticks() < goal){
-        asm volatile("sti");
-        asm volatile("hlt");
-    }
-}

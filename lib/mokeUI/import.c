@@ -2,10 +2,11 @@
 #include "../../drivers/vbe/vbe.h"
 #include "../../drivers/screen/screen.h"
 #include "../string/string.h"
+#include "../shell/shell.h"
 
-int ctx_x = 0;
-int ctx_y = 0;
 static int current_layer = LAYER_WALLPAPER;
+int ctx_x                = 0;
+int ctx_y                = 0;
 
 
 static MokeButton button_list[32];
@@ -15,13 +16,29 @@ void clear_buttons(){
     button_count = 0;
 }
 
-void add_button(int x, int y, int w, int h, void (*action)()){
+void UI_update_cursor_state(int mx, int my) {
+    char* target_cursor = "def";
+
+    for (int i = 0; i < button_count; i++) {
+        if (mx >= button_list[i].x && mx <= (button_list[i].x + button_list[i].w) &&
+            my >= button_list[i].y && my <= (button_list[i].y + button_list[i].h)) {
+            
+            target_cursor = button_list[i].cursor_type;
+            break;
+        }
+    }
+
+    change_cursor(target_cursor);
+}
+
+void add_button(int x, int y, int w, int h, void (*action)(), char* cursor_type){
     if(button_count < 32){
-        button_list[button_count].x = x;
-        button_list[button_count].y = y;
-        button_list[button_count].w = w;
-        button_list[button_count].h = h;
         button_list[button_count].action = action;
+        button_list[button_count].x      = x;
+        button_list[button_count].y      = y;
+        button_list[button_count].w      = w;
+        button_list[button_count].h      = h;
+        button_list[button_count].cursor_type = (cursor_type != 0) ? cursor_type : "def";
         button_count++;
     }
 }
@@ -72,6 +89,11 @@ int is_border_pixel(int px, int py, int x, int y, int w, int h, ButtonArgs a){
     return 1;
 }
 
+int UI_is_mouse_over(int mx, int my, MokeButton btn){
+    return (mx >= btn.x && mx <= (btn.x + btn.w) &&
+            my >= btn.y && my <= (btn.y + btn.h));
+}
+
 int is_pixel_inside_radius(int px, int py, int x, int y, int w, int h, ButtonArgs a){
     if(px < x + a.rTopL && py < y + a.rTopL){
         int dx = (x + a.rTopL) - px;
@@ -106,12 +128,17 @@ void set_layer(LayerID layer){
 
 void UI_btn(ButtonArgs args){
     if(args.hidden == 1) return;
+
     set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
     int width = (args.w > 0) ? args.w : (strlen(args.text) * 8) + (args.padding * 2);
     int height = (args.h > 0) ? args.h : 8 + (args.padding * 2);
+
+    if(args.bg == 0){
+        args.bg = rgba(0, 0, 0, 0);
+    }
 
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
@@ -137,7 +164,7 @@ void UI_btn(ButtonArgs args){
     } else {
         draw_string(final_x + args.padding, final_y + args.padding, args.text, args.fg, args.bg);
     }
-    add_button(final_x, final_y, width, height, args.action);
+    add_button(final_x, final_y, width, height, args.action, args.cursor);
 }
 
 void UI_rect(RectArgs args){
@@ -145,6 +172,11 @@ void UI_rect(RectArgs args){
     set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
+
+    if(args.bg == 0){
+        args.bg = rgba(0, 0, 0, 0);
+        return;
+    }
 
     for(int i = 0; i < args.h; i++){
         for(int j = 0; j < args.w; j++){
@@ -160,12 +192,52 @@ void UI_rect(RectArgs args){
             }
         }
     }
+    if(args.action != 0){
+        add_button(final_x, final_y, args.w, args.h, args.action, "poi");
+    }
+}
+
+void UI_TextEntry(TextEntryArgs args){
+    set_layer(args.layer);
+    int final_x = args.x + ctx_x;
+    int final_y = args.y + ctx_y;
+
+    if(args.bg == 0){
+        args.bg = rgba(0, 0, 0, 0);
+    }
+
+    for(int i = 0; i < args.h; i++){
+        for(int j = 0; j < args.w; j++){
+            
+            int px = final_x + j;
+            int py = final_y + i;
+
+            if(is_pixel_inside_radius(px, py, final_x, final_y, args.w, args.h, (ButtonArgs){
+                .rTopL = args.rTopL, .rTopR = args.rTopR, 
+                .rBotL = args.rBotL, .rBotR = args.rBotR
+            })){
+                put_pixel(px, py, args.bg);
+            }
+        }
+    }
+    
+    if (args.buffer != 0 && strlen(args.buffer) > 0) {
+        draw_string(final_x + 5, (final_y + args.h / 2) - 4, args.buffer, args.colour, rgba(0,0,0,0));
+    } else if (args.placeholder != 0) {
+        draw_string(final_x + 10, (final_y + args.h / 2) - 4, args.placeholder, rgba(0, 0, 0, 177), rgba(0, 0, 0, 0));
+    }
+    add_button(final_x, final_y, args.w, args.h, 0, "ty");
 }
 
 void UI_text(TextArgs args){
     set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
+
+    if(args.bg == 0){
+        args.bg = rgba(0, 0, 0, 0);
+    }
+    
 
     draw_string(final_x, final_y, args.text, args.colour, args.bg);
 }

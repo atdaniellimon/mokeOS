@@ -1,0 +1,31 @@
+# Moke Grub
+desktop-color: "#263238"
+
++ boot_menu {
+  left = 40%
+  top = 40%
+  width = 40%
+  height = 40%
+  
+  item_font = "Terminus Regular 16" 
+  item_color = "#ffffff"
+  
+  selected_item_color = "#ffffff/#01A9C1" 
+  
+  selected_item_pixmap = "select_clean.png"
+
+  item_height = 36
+  item_padding = 5
+  item_spacing = 10
+}
+
++ label {
+  top = 80%
+  left = 0
+  width = 100%
+  align = "center"
+  id = "__timeout__"
+  text = "Starting MokeOS in %d seconds"
+  color = "#ffffff"
+  font = "Terminus 12"
+}
