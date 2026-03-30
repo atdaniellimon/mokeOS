@@ -86,6 +86,14 @@ void ui_remove_sys(void (*func)()){
     }
 }
 
+void open_app(void (*app_function)()) {
+    if (app_count < 10) {
+        layer_apps_list[app_count] = app_function;
+        app_count++;
+        ui_needs_update = 1;
+    }
+}
+
 void on_mouse_signal(int x, int y, int b){
     if((b & 1) && !mouse.last_left){ 
         UI_process_click(x, y); 
