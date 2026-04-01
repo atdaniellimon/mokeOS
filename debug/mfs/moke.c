@@ -31,11 +31,10 @@ int ata_init(){
 
     while(1){
         uint8_t status = inb(0x1F7);
-
+        
         if(status & 0x01){
             return 0;
         }
-
         if(!(status & 0x80) && (status & 0x08)){
             break;
         }

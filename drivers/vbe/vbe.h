@@ -27,7 +27,7 @@ void vbe_init(void* mbi);
 void put_pixel(int x, int y, uint32_t color_raw);
 void draw_rect(int x, int y, int w, int h, uint32_t color);
 void vbe_clear(uint32_t color);
-void draw_char(int x, int y, char c, uint32_t fg, uint32_t bg);
+int draw_char(int x, int y, char c, uint32_t fg);
 void draw_string(int x, int y, char* str, uint32_t fg, uint32_t bg);
 extern framebuffer_t fb;
 uint32_t blend_colors(mcolor_t front, uint32_t back_raw);

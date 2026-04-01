@@ -1,15 +1,7 @@
 #ifndef IMPORT_H
 #define IMPORT_H
 
-#include "../stdint/types.h"
-
-typedef enum {
-    LAYER_WALLPAPER = 0,
-    LAYER_APPS      = 1,
-    LAYER_SYSTEM    = 2,
-    LAYER_CURSOR    = 3,
-    LAYER_COUNT     = 4
-} LayerID;
+#include "stdint.h"
 
 typedef struct {
     int x, y, w, h;
@@ -47,7 +39,6 @@ typedef struct {
     int border;
     int rTopL, rTopR, rBotL, rBotR;
     void (*action)();
-    LayerID layer;
     int hidden;
     int textAlign;
     char* cursor;
@@ -58,7 +49,6 @@ typedef struct {
     int x, y;
     uint32_t colour;
     uint32_t bg;
-    LayerID layer;
     int hidden;
 } TextArgs;
 
@@ -73,7 +63,6 @@ typedef struct {
     int rTopL, rTopR, rBotL, rBotR;
     int border;
     int textAlign;
-    LayerID layer;
     int hidden;
     char* cursor;
     void (*keypress)(char* buffer);
@@ -83,8 +72,6 @@ void UI_btn(ButtonArgs args);
 void UI_rect(RectArgs args);
 void UI_text(TextArgs args);
 void UI_TextEntry(TextEntryArgs args);
-void UI_push_context(int x, int y);
-void UI_pop_context(int x, int y);
 void UI_hide(UI_component* c);
 void UI_show(UI_component* c);
 
@@ -92,5 +79,8 @@ void clear_buttons();
 void add_button(int x, int y, int w, int h, void (*action)(), char* cursor_type);
 void UI_process_click(int mx, int my);
 void UI_update_cursor_state(int mx, int my);
+unsigned long rgb(int r, int g, int b);
+void UI_push_context(int x, int y);
+void UI_pop_context(int x, int y);
 
 #endif

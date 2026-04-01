@@ -39,6 +39,24 @@ void vbe_swap(){
     }
 }
 
+uint8_t get_glyph_width(unsigned char c) {
+    uint8_t* glyph = font8x8[(int)c];
+    uint8_t max_col = 0;
+
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            if (glyph[row] & (1 << col)) {
+                if (col > max_col) {
+                    max_col = col;
+                }
+            }
+        }
+    }
+    
+    if (max_col == 0 && c == ' ') return 4; 
+    return max_col + 1;
+}
+
 void draw_rect(int x, int y, int w, int h, uint32_t colour){
     for(int row = y; row < y + h; row++){
         for(int col = x; col < x + w; col++){
@@ -50,28 +68,31 @@ void draw_rect(int x, int y, int w, int h, uint32_t colour){
 void vbe_clear(uint32_t colour){
     draw_rect(0, 0, fb.width, fb.height, colour);
 }
-void draw_char(int x, int y, char c, uint32_t fg, uint32_t bg){
+int draw_char(int x, int y, char c, uint32_t fg) {
     uint8_t* glyph = font8x8[(int)c];
+    uint8_t width = get_glyph_width(c);
 
-    for(int row = 0; row < 8; row++){
-        for(int col = 0; col < 8; col++){
-            if(glyph[row] & (1 << col)){
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < width; col++) {
+            if (glyph[row] & (1 << col)) {
                 put_pixel(x + col, y + row, fg);
-            } else {
-                put_pixel(x + col, y + row, bg);
             }
         }
     }
+    return width;
 }
 
 void draw_string(int x, int y, char* str, uint32_t fg, uint32_t bg){
+    (void)bg;
     int i = 0;
+    int current_x = x;
+
     while(str[i] != '\0'){
-        draw_char(x + (i * 8), y, str[i], fg, bg);
+        int width = draw_char(current_x, y, str[i], fg);
+        current_x += width + 1; 
         i++;
     }
 }
-
 uint32_t blend_colors(mcolor_t front, uint32_t back_raw){
     if (front.channels.a == 255) return front.raw;
     if (front.channels.a == 0)   return back_raw;

@@ -15,12 +15,20 @@ mokeOS Beta - Shell con capas y cursor estable
 #include "../../debug/mfs/moke.h"
 #include "../signals/signals.h"
 #include "cursors/cursors.h"
+#include "../../drivers/keyboard/keyboard.h"
+#include "../AppsInstance/instance.h"
 
 //From now and on, I will create comments for better readability and to maintain consistency with the codebase.
 
 #define current_user "tester"
 #define MAGIC_COLOUR 0xDEADBEEF
 
+static UI_component quick_menu       = { .bounds = { .hidden = 1 } };
+static UI_component alert_box        = { .bounds = { .hidden = 1 } };
+static UI_component power_alert_box  = { .bounds = { .hidden = 1 } };
+static UI_component sherlock         = { .bounds = { .hidden = 1 } };
+static UI_component lock_panel = { .bounds = { .hidden = 0 } };
+static UI_component top_bar_comp = { .bounds = { .hidden = 1 } };
 uint8_t (*current_mouse_design)[16] = mouse_default_design;
 
 int app_count = 0;
@@ -46,6 +54,27 @@ void change_cursor(char* cursor){
     } else if(cursor[0] == 'p' && cursor[1] == 'o' && cursor[2] == 'i'){
         current_mouse_design = mouse_pointer_design;
     }
+}
+
+void switch_to_user_mode() {
+    static uint8_t user_stack[4096];
+    uint32_t user_stack_top = (uint32_t)user_stack + 4096;
+
+    asm volatile(
+        "mov $0x23, %%ax \n\t"
+        "mov %%ax, %%ds \n\t"
+        "mov %%ax, %%es \n\t"
+        "mov %%ax, %%fs \n\t"
+        "mov %%ax, %%gs \n\t"
+        "pushl $0x23 \n\t"
+        "pushl %0 \n\t"
+        "pushfl \n\t"
+        "pushl $0x1B \n\t"
+        "pushl $1f \n\t"
+        "iret \n\t"
+        "1: \n\t"
+        : : "r"(user_stack_top) : "ax"
+    );
 }
 
 // VBE Layers: wallpaper, apps, system
@@ -86,7 +115,8 @@ void ui_remove_sys(void (*func)()){
     }
 }
 
-void open_app(void (*app_function)()) {
+//void open_app(void (*app_function)()){
+void open_app(){
     if (app_count < 10) {
         layer_apps_list[app_count] = app_function;
         app_count++;
@@ -100,6 +130,16 @@ void on_mouse_signal(int x, int y, int b){
     }
     mouse.last_left = (b & 1);
     UI_update_cursor_state(mouse.x, mouse.y);
+    ui_needs_update = 1;
+}
+void on_keyboard_signal(unsigned char key){
+    ui_needs_update = 1;
+    
+    if(key == 27){
+        UI_hide(&sherlock);
+        keyboard_splice();
+        return;
+    }
     ui_needs_update = 1;
 }
 
@@ -139,10 +179,6 @@ void init_layers(){
     }
 }
 
-static UI_component quick_menu       = { .bounds = { .hidden = 1 } };
-static UI_component alert_box        = { .bounds = { .hidden = 1 } };
-static UI_component power_alert_box  = { .bounds = { .hidden = 1 } };
-static UI_component sherlock         = { .bounds = { .hidden = 1 } };
 char* power_alert_box_text           = "";
 
 // Toggles the visibility of the quick menu when the "moke" button is clicked
@@ -162,46 +198,149 @@ void mouse_test(){
     change_cursor("poi");
 }
 
+void login_action(){
+    UI_hide(&lock_panel);
+    UI_show(&top_bar_comp);
+}
+
+void lock_action(){
+    UI_show(&lock_panel);
+    UI_hide(&top_bar_comp);
+    UI_hide(&quick_menu);
+    UI_hide(&sherlock);
+}
+
+void shell_reboot(){
+    power("reboot");
+}
+void shell_poweroff(){
+    power("off");
+}
+
+void render_lock_screen(){
+    UI_Container(lock_panel, ((RectArgs){
+        .w = 400, .h = 260, .x = ((screen_w / 2) - 200), .y = ((screen_h / 2) - 170),
+        .hidden = lock_panel.bounds.hidden
+    })){
+        UI_rect((RectArgs){
+            .w = 400,
+            .h = 260,
+            .bg = rgba(255, 255, 255, 100),
+            .rBotL = 25,
+            .rTopR = 25,
+            .rBotR = 25,
+            .rTopL = 25
+        });
+        UI_text((TextArgs){
+            .text = "mokeOS",
+            .x = ((strlen("mokeOS") * 8) / 2) + 150,
+            .y = 70,
+            .colour = rgb(0, 0, 0)
+        });
+        UI_rect((RectArgs){
+            .w = 30,
+            .h = 30,
+            .x = 140,
+            .y = 145,
+            .bg = rgb(89, 89, 89)
+        });
+        UI_btn((ButtonArgs){
+            .text = current_user,
+            .fg = rgb(0, 0, 0),
+            .padding = 10,
+            .action = login_action,
+            .textAlign = 1,
+            .w = 200,
+            .h = 60,
+            .x = 100,
+            .y = 130,
+            .cursor = "poi"
+        });
+
+        UI_btn((ButtonArgs){
+            .text = "Restart",
+            .bg = rgba(200, 200, 200, 100),
+            .fg = rgb(0, 0, 0),
+            .padding = 10,
+            .x = 120,
+            .y = 220,
+            .action = shell_reboot,
+            .rBotL = 15,
+            .rTopR = 15,
+            .rBotR = 15,
+            .rTopL = 15
+        });
+        UI_btn((ButtonArgs){
+            .text = "Shut Down",
+            .bg = rgba(200, 200, 200, 100),
+            .fg = rgb(0, 0, 0),
+            .padding = 10,
+            .x = 200,
+            .y = 220,
+            .action = shell_poweroff,
+            .rBotL = 15,
+            .rTopR = 15,
+            .rBotR = 15,
+            .rTopL = 15
+        });
+    }
+}
+
 void render_alert(){
     UI_Container(alert_box, ((RectArgs){
-        .x = (screen_w / 2) - 150,
-        .y = (screen_h / 2) - 100,
-        .w = 300,
-        .h = 200,
+        .w = screen_w,
+        .h = screen_h,
+        .x = 0,
+        .y = 0,
         .hidden = alert_box.bounds.hidden
     })){
         UI_rect((RectArgs){
+            .w = screen_w,
+            .h = screen_h,
+            .x = 0,
+            .y = 0,
+            .bg = rgba(0, 0, 0, 200)
+        });
+        UI_component alert_itself;
+        UI_Container(alert_itself, ((RectArgs){
+            .x = (screen_w / 2) - 150,
+            .y = (screen_h / 2) - 100,
             .w = 300,
             .h = 200,
-            .bg = rgba(221, 221, 221, 100),
-            .rBotL = 25,
-            .rBotR = 25,
-            .rTopL = 25,
-            .rTopR = 25
-        });
-        UI_text((TextArgs){
-            .bg = rgba(0, 0, 0, 0),
-            .x = 15,
-            .y = 15,
-            .text = "lorem",
-            .colour = rgb(0, 0, 0)
-        });
-        UI_btn((ButtonArgs){
-            .text = "ok",
-            .bg = rgb(89, 171, 229),
-            .fg = rgb(255, 255, 255),
-            .y = 140,
-            .w = 250,
-            .x = 25,
-            .h = 40,
-            .action = hide_alert,
-            .rBotL = 15,
-            .rBotR = 15,
-            .rTopL = 15,
-            .rTopR = 15,
-            .textAlign = 1,
-            .cursor = "poi"
-        });
+        })){
+            UI_rect((RectArgs){
+                .w = 300,
+                .h = 200,
+                .bg = rgb(221, 221, 221),
+                .rBotL = 25,
+                .rBotR = 25,
+                .rTopL = 25,
+                .rTopR = 25
+            });
+            UI_text((TextArgs){
+                .bg = rgba(0, 0, 0, 0),
+                .x = 15,
+                .y = 15,
+                .text = "lorem",
+                .colour = rgb(0, 0, 0)
+            });
+            UI_btn((ButtonArgs){
+                .text = "ok",
+                .bg = rgb(89, 171, 229),
+                .fg = rgb(255, 255, 255),
+                .y = 140,
+                .w = 250,
+                .x = 25,
+                .h = 40,
+                .action = hide_alert,
+                .rBotL = 15,
+                .rBotR = 15,
+                .rTopL = 15,
+                .rTopR = 15,
+                .textAlign = 1,
+                .cursor = "poi"
+            });
+        }
     }
 }
 
@@ -240,18 +379,10 @@ void show_alert(){
     UI_show(&alert_box);
 }
 
-void shell_reboot(){
-    show_power_alert("Rebooting...");
-    power("reboot");
-}
-void shell_poweroff(){
-    show_power_alert("Powering off...");
-    power("off");
-}
+
 
 // Renders the top bar with buttons and the current time, and registers their actions
 void render_top_bar(){
-    static UI_component top_bar_comp; 
     char buf[12];
 
     // Create the top bar container and its buttons, and draw a separator line
@@ -260,6 +391,7 @@ void render_top_bar(){
         .y = 0, 
         .w = screen_w, 
         .h = 30, 
+        .hidden = top_bar_comp.bounds.hidden
     })){
         UI_rect((RectArgs){
             .x = 0, 
@@ -321,29 +453,72 @@ void render_top_bar(){
     draw_string(964,12,buf,rgb(0,0,0),rgba(0, 0, 0, 0));
 }
 
+static UI_component SherlockResults = { .bounds = { .hidden = 1 } };
+void sherlockSearch(char* buffer){
+    if(buffer[0] != '\0'){
+        UI_show(&SherlockResults);
+    } else {
+        UI_hide(&SherlockResults);
+    }
+}
+
 // Sherlock is back!!
 // (Just placeholder btw)
 void render_sherlock(){
     UI_Container(sherlock, ((RectArgs){
         .w      = 300,
-        .h      = 60,
+        .h      = 70,
         .x      = (screen_w / 2) - 200,
         .y      = 200,
         .hidden = sherlock.bounds.hidden
     })){
         UI_TextEntry((TextEntryArgs){
             .placeholder = "Sherlock search",
+            .buffer = raw_input_stream,
             .x = 0,
             .y = 0,
             .w = 400,
             .h = 60,
-            .bg = rgba(255, 255, 255, 150),
+            .bg = rgba(221, 221, 221, 100),
             .colour = rgb(0, 0, 0),
             .rBotL = 20,
             .rBotR = 20,
             .rTopL = 20,
-            .rTopR = 20
+            .rTopR = 20,
+            .keypress = sherlockSearch
         });
+        UI_Container(SherlockResults, ((RectArgs){
+            .w = 400,
+            .h = 100,
+            .y = 70,
+            .x = 0,
+            .hidden = SherlockResults.bounds.hidden
+        })){
+            int results_y = 10;
+            UI_rect((RectArgs){
+                .w = 400,
+                .h = 200,
+                .rBotL = 20,
+                .rBotR = 20,
+                .rTopL = 20,
+                .rTopR = 20,
+                .bg = rgba(221, 221, 221, 100)
+            });
+
+            struct mfs_entry found_files[10];
+            int count = mfs_list_files(found_files, 10);
+            if(count > 0){
+                for(int i = 0; i < count; i++) {
+                    results_y += 20;
+                    UI_btn((ButtonArgs){
+                        .x = 35,
+                        .y = results_y,
+                        .text = found_files[i].name,
+                        .fg = rgb(0, 0, 0)
+                    });
+                }
+            }
+        }
     }
 }
 
@@ -400,14 +575,14 @@ void renderMokeOptions(){
             .action = toggle_sherlock
         });
         UI_btn((ButtonArgs){
-            .text = "Restart",
+            .text = "Lock screen",
             .x = 1,
             .y = 65,
             .w = 118,
             .padding = 10,
             .fg = rgb(0,0,0),
             .bg = rgba(0, 0, 0, 0),
-            .action = shell_reboot
+            .action = lock_action
         });
         UI_btn((ButtonArgs){
             .text = "Power Off",
@@ -428,6 +603,7 @@ void start_shell(){
     ctx_y = 0;
     init_layers();
     mouse_set_handler(on_mouse_signal);
+    keyboard_set_handler(on_keyboard_signal);
     
     while(1){
         if(ui_needs_update){
@@ -438,9 +614,10 @@ void start_shell(){
             clear_layer_magic(layer_sys);
             render_top_bar();
             renderMokeOptions();
-            render_alert();
             render_power_alert();
             render_sherlock();
+            render_alert();
+            render_lock_screen();
 
             end_layer_draw();
 

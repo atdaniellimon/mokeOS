@@ -1,12 +1,17 @@
-#include "import.h"
-#include "../../drivers/vbe/vbe.h"
-#include "../../drivers/screen/screen.h"
-#include "../string/string.h"
-#include "../shell/shell.h"
+#include "MokeUI.h"
 
-static int current_layer = LAYER_WALLPAPER;
-int ctx_x                = 0;
-int ctx_y                = 0;
+unsigned long rgb(int r, int g, int b){   
+    return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+}
+
+//#include "import.h"
+//#include "../../drivers/vbe/vbe.h"
+//#include "../../drivers/screen/screen.h"
+//#include "../string/string.h"
+//#include "../shell/shell.h"
+
+int ctx_x = 0;
+int ctx_y = 0;
 
 
 static MokeButton button_list[32];
@@ -123,14 +128,9 @@ int is_pixel_inside_radius(int px, int py, int x, int y, int w, int h, ButtonArg
     return 1;
 }
 
-void set_layer(LayerID layer){
-    current_layer = layer;
-}
-
 void UI_btn(ButtonArgs args){
     if(args.hidden == 1) return;
 
-    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
@@ -138,7 +138,7 @@ void UI_btn(ButtonArgs args){
     int height = (args.h > 0) ? args.h : 8 + (args.padding * 2);
 
     if(args.bg == 0){
-        args.bg = rgba(0, 0, 0, 0);
+        args.bg = rgb(0, 0, 0);
     }
 
     for(int i = 0; i < height; i++){
@@ -170,12 +170,11 @@ void UI_btn(ButtonArgs args){
 
 void UI_rect(RectArgs args){
     if(args.bg == 0) return;
-    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
     if(args.bg == 0){
-        args.bg = rgba(0, 0, 0, 0);
+        args.bg = rgb(0, 0, 0);
         return;
     }
 
@@ -199,12 +198,11 @@ void UI_rect(RectArgs args){
 }
 
 void UI_TextEntry(TextEntryArgs args){
-    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
     if(args.bg == 0){
-        args.bg = rgba(0, 0, 0, 0);
+        args.bg = rgb(0, 0, 0);
     }
     int current_len = (args.buffer != 0) ? strlen(args.buffer) : 0;
 
@@ -224,9 +222,9 @@ void UI_TextEntry(TextEntryArgs args){
     }
     
     if (args.buffer != 0 && strlen(args.buffer) > 0) {
-        draw_string(final_x + 10, (final_y + args.h / 2) - 4, args.buffer, args.colour, rgba(0,0,0,0));
+        draw_string(final_x + 10, (final_y + args.h / 2) - 4, args.buffer, args.colour, rgb(0, 0, 0));
     } else if (args.placeholder != 0) {
-        draw_string(final_x + 10, (final_y + args.h / 2) - 4, args.placeholder, rgba(0, 0, 0, 177), rgba(0, 0, 0, 0));
+        draw_string(final_x + 10, (final_y + args.h / 2) - 4, args.placeholder, rgb(0, 0, 0), rgb(0, 0, 0));
     }
     add_button(final_x, final_y, args.w, args.h, 0, "ty");
     if(args.keypress != 0 && current_len != last_buffer_len){
@@ -236,12 +234,11 @@ void UI_TextEntry(TextEntryArgs args){
 }
 
 void UI_text(TextArgs args){
-    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
     if(args.bg == 0){
-        args.bg = rgba(0, 0, 0, 0);
+        args.bg = rgb(0, 0, 0);
     }
     
 
