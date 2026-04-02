@@ -1,17 +1,22 @@
+/*
+mokeOS Beta - Shell con capas y cursor estable
+*/
 #include "shell.h"
-#include "MokeApp.h"
 #include "terminal.h"
+#include "../../drivers/vbe/vbe.h"
+#include "../../drivers/screen/screen.h"
 #include "../string/string.h"
+#include "../../arch/i386/io.h"
 #include "../../drivers/hardware/hardware.h"
 #include "../timer/timer.h"
 #include "../date/date.h"
+#include "../../drivers/mouse/ps2.h"
 #include "../mokeUI/import.h"
 #include "../../debug/mfs/moke.h"
 #include "../signals/signals.h"
 #include "cursors/cursors.h"
+#include "../../drivers/keyboard/keyboard.h"
 #include "../AppsInstance/instance.h"
-#include "../paging/paging.h"
-#include "../elf/elf.h"
 
 //From now and on, I will create comments for better readability and to maintain consistency with the codebase.
 
@@ -30,9 +35,16 @@ int app_count = 0;
 int sys_count = 0;
 void (*layer_apps_list[10])();
 void (*layer_sys_list[10])();
-extern uint32_t alloc_frame();
-extern void tss_set_stack(uint32_t stack);
 static uint32_t* vram_phys = 0;
+
+void begin_layer_draw(uint32_t* layer_ptr){
+    if(vram_phys == 0) vram_phys = fb.addr;
+    fb.addr = layer_ptr;
+}
+
+void end_layer_draw(){
+    fb.addr = vram_phys;
+}
 
 void change_cursor(char* cursor){
     if(cursor[0] == 'd' && cursor[1] == 'e' && cursor[2] == 'f'){
@@ -42,6 +54,27 @@ void change_cursor(char* cursor){
     } else if(cursor[0] == 'p' && cursor[1] == 'o' && cursor[2] == 'i'){
         current_mouse_design = mouse_pointer_design;
     }
+}
+
+void switch_to_user_mode() {
+    static uint8_t user_stack[4096];
+    uint32_t user_stack_top = (uint32_t)user_stack + 4096;
+
+    asm volatile(
+        "mov $0x23, %%ax \n\t"
+        "mov %%ax, %%ds \n\t"
+        "mov %%ax, %%es \n\t"
+        "mov %%ax, %%fs \n\t"
+        "mov %%ax, %%gs \n\t"
+        "pushl $0x23 \n\t"
+        "pushl %0 \n\t"
+        "pushfl \n\t"
+        "pushl $0x1B \n\t"
+        "pushl $1f \n\t"
+        "iret \n\t"
+        "1: \n\t"
+        : : "r"(user_stack_top) : "ax"
+    );
 }
 
 // VBE Layers: wallpaper, apps, system
@@ -82,34 +115,13 @@ void ui_remove_sys(void (*func)()){
     }
 }
 
-void launch_app(char* filename){
-    void* elf_data = mfs_load_to_ram(filename);
-    if(!elf_data) return;
-
-    page_directory_t* app_dir = paging_create_directory();
-    
-    for(int i = 768; i < 1024; i++){
-        app_dir->entries[i] = kernel_directory->entries[i];
+//void open_app(void (*app_function)()){
+void open_app(){
+    if (app_count < 10) {
+        layer_apps_list[app_count] = app_function;
+        app_count++;
+        ui_needs_update = 1;
     }
-
-    uint32_t entry = elf_load(elf_data, app_dir);
-    if(!entry) return;
-
-    uint32_t user_stack = 0x800000; // 8MB
-    for(uint32_t i = user_stack - 4096; i < user_stack; i += 4096){
-        paging_map(app_dir, i, alloc_frame(), 1);
-    }
-
-    static uint8_t kernel_stack[4096];
-    tss_set_stack((uint32_t)kernel_stack + 4096);
-
-    paging_load(app_dir);
-
-    jump_to_usermode(entry, user_stack);
-}
-
-void open_calculator(){
-    launch_app("calc.elf");
 }
 
 void on_mouse_signal(int x, int y, int b){
@@ -167,7 +179,7 @@ void init_layers(){
     }
 }
 
-char* power_alert_box_text = "";
+char* power_alert_box_text           = "";
 
 // Toggles the visibility of the quick menu when the "moke" button is clicked
 void toggle_moke_menu(){
@@ -502,8 +514,7 @@ void render_sherlock(){
                         .x = 35,
                         .y = results_y,
                         .text = found_files[i].name,
-                        .fg = rgb(0, 0, 0),
-                        .action = open_calculator
+                        .fg = rgb(0, 0, 0)
                     });
                 }
             }
@@ -590,11 +601,17 @@ void start_shell(){
     extern int ctx_x, ctx_y;
     ctx_x = 0; 
     ctx_y = 0;
+    init_layers();
+    mouse_set_handler(on_mouse_signal);
+    keyboard_set_handler(on_keyboard_signal);
     
     while(1){
         if(ui_needs_update){
             clear_buttons(); 
 
+            begin_layer_draw(layer_sys);
+
+            clear_layer_magic(layer_sys);
             render_top_bar();
             renderMokeOptions();
             render_power_alert();
@@ -602,13 +619,28 @@ void start_shell(){
             render_alert();
             render_lock_screen();
 
+            end_layer_draw();
+
+            begin_layer_draw(layer_apps);
+            clear_layer_magic(layer_apps);
             for(int i = 0; i < app_count; i++){
                 layer_apps_list[i]();
             }
-            
+            end_layer_draw();
+
             compose_ui();
 
+            UI_update_cursor_state(mouse.x, mouse.y);
             ui_needs_update = 0;
         }
+
+
+        if(mouse.left && !mouse.last_left){
+            UI_process_click(mouse.x, mouse.y);
+            ui_needs_update = 1;
+        }
+        mouse.last_left = mouse.left;
+
+        asm volatile("hlt");
     }
 }

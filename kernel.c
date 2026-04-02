@@ -1,16 +1,14 @@
-#include "lib/string/string.h"
-#include "drivers/screen/screen.h"
 #include "arch/i386/io.h"
+#include "lib/shell/shell.h"
 #include "arch/i386/gdt.h"
 #include "arch/i386/idt.h"
+#include "lib/timer/timer.h"
+#include "drivers/vbe/vbe.h"
+#include "lib/string/string.h"
 #include "drivers/keyboard/keyboard.h"
-#include "lib/shell/shell.h"
 #include "drivers/mouse/ps2.h"
 #include "lib/malloc/mem.h"
-#include "lib/timer/timer.h"
 #include "debug/mfs/moke.h"
-#include "lib/syscall/syscall.h"
-#include "drivers/vbe/vbe.h"
 
 void disable_bios_cursor(){
     outb(0x3D4, 0x0A);
@@ -27,15 +25,14 @@ void main(void* mbi, unsigned int magic){
     ata_init();
     mfs_mount();
     idt_init();
-    syscall_init();
     disable_bios_cursor();
     vbe_init(mbi);
     timer_init(1000); 
     mouse_init(); 
     keyboard_init();
-    asm volatile("sti");
+    asm volatile("sti"); 
 
-    jump_to_usermode(shell_entry, user_stack);
+    start_shell();
 
     for(;;){ asm volatile("hlt"); }
 }
