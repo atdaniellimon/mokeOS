@@ -1,14 +1,16 @@
+#include "lib/string/string.h"
+#include "drivers/screen/screen.h"
 #include "arch/i386/io.h"
-#include "lib/shell/shell.h"
 #include "arch/i386/gdt.h"
 #include "arch/i386/idt.h"
-#include "lib/timer/timer.h"
-#include "drivers/vbe/vbe.h"
-#include "lib/string/string.h"
 #include "drivers/keyboard/keyboard.h"
+#include "lib/shell/shell.h"
 #include "drivers/mouse/ps2.h"
 #include "lib/malloc/mem.h"
+#include "lib/timer/timer.h"
 #include "debug/mfs/moke.h"
+#include "lib/syscall/syscall.h"
+#include "drivers/vbe/vbe.h"
 
 void disable_bios_cursor(){
     outb(0x3D4, 0x0A);

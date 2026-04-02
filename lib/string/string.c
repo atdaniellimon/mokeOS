@@ -116,3 +116,12 @@ int sprintf(char* buffer, const char* format, ...){
     moke_va_end(args);
     return (ptr - buffer);
 }
+void* memset(void* dest, int val, unsigned int n){
+    unsigned char* ptr = (unsigned char*)dest;
+    while(n > 0){
+        *ptr = (unsigned char)val;
+        ptr++;
+        n--;
+    }
+    return dest;
+}
