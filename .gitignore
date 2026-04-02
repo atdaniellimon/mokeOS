@@ -1,3 +1,8 @@
 .DS_Store
 mokeos.bin
 *.o
+test.img
+isodir
+qemu.log
+*.iso
+i.sh

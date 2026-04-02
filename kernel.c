@@ -2,7 +2,16 @@
 #include "drivers/screen/screen.h"
 #include "arch/i386/io.h"
 #include "drivers/keyboard/keyboard.h"
+<<<<<<< Updated upstream
 #include "lib/shell.h"
+=======
+#include "drivers/mouse/ps2.h"
+#include "lib/malloc/mem.h"
+#include "debug/mfs/moke.h"
+#include "lib/syscall/syscall.h"
+
+void jump_to_usermode(uint32_t entry, uint32_t stack);
+>>>>>>> Stashed changes
 
 void disable_bios_cursor() {
     outb(0x3D4, 0x0A);
@@ -31,6 +40,20 @@ void main(void* mbi){
 
     clean_screen();
     disable_bios_cursor();
+<<<<<<< Updated upstream
     init_terminal();
 }
 //qemu-system-i386 -kernel mokeos.bin
+=======
+    syscall_init();
+    vbe_init(mbi);
+    timer_init(1000); 
+    mouse_init(); 
+    keyboard_init();
+    asm volatile("sti"); 
+
+    start_shell();
+
+    for(;;){ asm volatile("hlt"); }
+}
+>>>>>>> Stashed changes
