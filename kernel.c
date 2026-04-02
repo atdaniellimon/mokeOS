@@ -27,14 +27,15 @@ void main(void* mbi, unsigned int magic){
     ata_init();
     mfs_mount();
     idt_init();
+    syscall_init();
     disable_bios_cursor();
     vbe_init(mbi);
     timer_init(1000); 
     mouse_init(); 
     keyboard_init();
-    asm volatile("sti"); 
+    asm volatile("sti");
 
-    start_shell();
+    jump_to_usermode(shell_entry, user_stack);
 
     for(;;){ asm volatile("hlt"); }
 }

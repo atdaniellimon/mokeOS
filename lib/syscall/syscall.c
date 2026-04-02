@@ -12,6 +12,8 @@
 #define SYS_EXIT 5
 #define SYS_DRAW_PIXEL 6
 
+extern void isr_syscall();
+
 static uint32_t syscall_dispatch(uint32_t num, uint32_t a, uint32_t b, uint32_t c, uint32_t d){
     switch(num){
         case SYS_DRAW_RECT:

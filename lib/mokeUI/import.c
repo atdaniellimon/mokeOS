@@ -1,8 +1,7 @@
 #include "import.h"
-#include "../../drivers/vbe/vbe.h"
-#include "../../drivers/screen/screen.h"
 #include "../string/string.h"
 #include "../shell/shell.h"
+#include "../shell/MokeApp.h"
 
 static int current_layer = LAYER_WALLPAPER;
 int ctx_x                = 0;
@@ -130,41 +129,23 @@ void set_layer(LayerID layer){
 void UI_btn(ButtonArgs args){
     if(args.hidden == 1) return;
 
-    set_layer(args.layer);
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
     int width = (args.w > 0) ? args.w : (strlen(args.text) * 8) + (args.padding * 2);
     int height = (args.h > 0) ? args.h : 8 + (args.padding * 2);
 
-    if(args.bg == 0){
-        args.bg = rgba(0, 0, 0, 0);
-    }
-
-    for(int i = 0; i < height; i++){
-        for(int j = 0; j < width; j++){
-            int curr_x = final_x + j;
-            int curr_y = final_y + i;
-
-            if(is_pixel_inside_radius(curr_x, curr_y, final_x, final_y, width, height, args)){
-                if(args.border && is_border_pixel(curr_x, curr_y, final_x, final_y, width, height, args)){
-                    put_pixel(curr_x, curr_y, rgb(0, 0, 0));
-                }else{
-                    put_pixel(curr_x, curr_y, args.bg);
-                }
-            }
-        }
-    }
+    app_draw_rect(final_x, final_y, width, height, args.bg);
 
     if(args.textAlign == 1){
         int text_width = strlen(args.text) * 8;
         int center_x = final_x + (width / 2) - (text_width / 2);
-        int center_y = final_y + (height /2) - 4;
-        
-        draw_string(center_x, center_y, args.text, args.fg, args.bg);
+        int center_y = final_y + (height / 2) - 4;
+        app_draw_string(center_x, center_y, args.text, args.fg);
     } else {
-        draw_string(final_x + args.padding, final_y + args.padding, args.text, args.fg, args.bg);
+        app_draw_string(final_x + args.padding, final_y + args.padding, args.text, args.fg);
     }
+    
     add_button(final_x, final_y, width, height, args.action, args.cursor);
 }
 
@@ -240,12 +221,7 @@ void UI_text(TextArgs args){
     int final_x = args.x + ctx_x;
     int final_y = args.y + ctx_y;
 
-    if(args.bg == 0){
-        args.bg = rgba(0, 0, 0, 0);
-    }
-    
-
-    draw_string(final_x, final_y, args.text, args.colour, args.bg);
+    app_draw_string(final_x, final_y, args.text, args.colour);
 }
 
 void UI_push_context(int x, int y){
