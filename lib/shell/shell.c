@@ -117,11 +117,11 @@ void ui_remove_sys(void (*func)()){
 
 //void open_app(void (*app_function)()){
 void open_app(){
-    if (app_count < 10) {
+    /*if (app_count < 10) {
         layer_apps_list[app_count] = app_function;
         app_count++;
         ui_needs_update = 1;
-    }
+    }*/
 }
 
 void on_mouse_signal(int x, int y, int b){

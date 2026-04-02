@@ -7,6 +7,12 @@
 idt_entry_t idt[256];
 idt_ptr_t idt_ptr;
 
+extern void isr_exception();
+extern void isr_timer();
+extern void isr_keyboard();
+extern void isr_mouse();
+extern void isr_default();
+
 void idt_set_gate(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags){
     idt[num].base_low  = base & 0xFFFF;
     idt[num].base_high = (base >> 16) & 0xFFFF;

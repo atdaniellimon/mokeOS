@@ -38,7 +38,7 @@ void k_print(char* message){
             cursor_x = 0;
             cursor_y += 8;
         } else {
-            draw_char(cursor_x, cursor_y, message[i], current_colour, background_colour);
+            draw_char(cursor_x, cursor_y, message[i], current_colour);
             cursor_x += 8;
             if(cursor_x >= (int)fb.width){
                 cursor_x = 0;
@@ -54,7 +54,7 @@ void k_print(char* message){
 void k_print_at(char* message, int x, int y){
     int offset = 0;
     for(int i = 0; message[i] != '\0'; i++){
-        draw_char(x + offset, y, message[i], current_colour, background_colour);
+        draw_char(x + offset, y, message[i], current_colour);
         offset += 8;
     }
 }
