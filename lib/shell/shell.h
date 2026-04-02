@@ -1,0 +1,11 @@
+#ifndef SHELL_H
+#define SHELL_H
+#include "../stdint/types.h"
+
+extern void* global_mbi_ptr;
+extern uint8_t (*current_mouse_design)[16];
+
+void start_shell();
+void change_cursor(char* cursor);
+
+#endif  
