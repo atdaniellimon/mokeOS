@@ -13,5 +13,6 @@ void exec_command(char* command);
 void exec_cat_command(char* command);
 void start_shell();
 void change_cursor(char* cursor);
+void shell_main();
 
 #endif  

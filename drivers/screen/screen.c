@@ -1,3 +1,11 @@
+/*
+    mokeOS' Screen driver
+    Version 1.0
+    Made by Daniel Limon for MokeOS
+
+    See more at daniellimon.github.io
+*/
+
 #include "screen.h"
 #include "../vbe/vbe.h"
 

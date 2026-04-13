@@ -12,6 +12,7 @@ extern void isr_timer();
 extern void isr_keyboard();
 extern void isr_mouse();
 extern void isr_default();
+extern void isr_syscall();
 
 void idt_set_gate(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags){
     idt[num].base_low  = base & 0xFFFF;
@@ -58,6 +59,7 @@ void idt_init(){
     idt_set_gate(32, (uint32_t)isr_timer, 0x08, 0x8E);
     idt_set_gate(33, (uint32_t)isr_keyboard, 0x08, 0x8E);
     idt_set_gate(44, (uint32_t)isr_mouse, 0x08, 0x8E);
+    idt_set_gate(0x80, (uint32_t)isr_syscall, 0x08, 0xEE);
 
     idt_load((uint32_t)&idt_ptr);
 }

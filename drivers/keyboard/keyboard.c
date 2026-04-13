@@ -1,3 +1,11 @@
+/*
+    mokeOS' Keyboard Driver
+    Version 1.0
+    Made by Daniel Limon for MokeOS
+
+    See more at daniellimon.github.io
+*/
+
 #include "keyboard.h"
 #include "../../arch/i386/io.h"
 #include "../../lib/string/string.h"

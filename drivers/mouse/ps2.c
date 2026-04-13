@@ -1,3 +1,11 @@
+/*
+    mokeOS's PS2 (Mouse) driver
+    Version Beta
+    Made by Daniel Limon for MokeOS
+
+    See more atdaniellimon.github.io
+*/
+
 #include "ps2.h"
 #include "../../lib/stdint/types.h"
 #include "../vbe/vbe.h"
@@ -5,15 +13,17 @@
 #include "../../arch/i386/io.h"
 #include "../../lib/string/string.h"
 
+/*
+    Stablishing mouse states
+*/
 mouse_state_t mouse = {512, 384, 0, 0, 0, 0}; 
 static int mouse_cycle = 0;
 static uint8_t mouse_bytes[3];
-static mouse_callback_t _shell_handler = 0;
 
-void mouse_set_handler(mouse_callback_t handler){
-    _shell_handler = handler;
-}
-
+/*
+    This functions look or write repeatedly
+    at mouse states.
+*/
 void ps2_wait_write(){
     while(inb(0x64) & 2);
 }
@@ -33,10 +43,18 @@ uint8_t mouse_read(){
     return inb(0x60);
 }
 
+/*
+    This function is called by the kernel
+    in order to initialize the mouse act-
+    ions and movements.
+*/
+
 void mouse_init(){
     uint8_t status;
 
-    while(inb(0x64) & 1){ inb(0x60); }
+    while(inb(0x64) & 1){
+        inb(0x60);
+    }
 
     ps2_wait_write();
     outb(0x64, 0xA8);
@@ -54,8 +72,17 @@ void mouse_init(){
 
     mouse_write(0xF4);
     mouse_read();
+
+    mouse.x = 512;
+    mouse.y = 384;
 }
 
+/*
+    This function is called by assembly
+    when it  receives an  interruption,
+    switching between cycles and upda-
+    ting data in real time.
+*/
 void mouse_handler(){
     uint8_t status = inb(0x64);
     if(!(status & 0x21)) return; 
@@ -80,9 +107,5 @@ void mouse_handler(){
         if(mouse.y > 767)  mouse.y = 767;
 
         mouse.left = mouse_bytes[0] & 0x01;
-
-        if(_shell_handler){
-            _shell_handler(mouse.x, mouse.y, mouse.left);
-        }
     }
 }

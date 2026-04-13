@@ -6,3 +6,4 @@ mokeos.bin
 mokeos.iso
 disk.img
 test.img
+*.log

@@ -1,4 +1,4 @@
-# mokeOS
+# mokeOS Beta
 
 A bare-metal x86 operating system built from scratch in C and Assembly.
 

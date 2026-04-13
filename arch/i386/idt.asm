@@ -56,3 +56,28 @@ isr_mouse:
     out 0x20, al
     popa
     iret
+
+global isr_syscall
+extern syscall_handler
+
+isr_syscall:
+    pusha            ; Guarda registros generales
+    push ds          ; Guarda segmentos
+    push es
+    push fs
+    push gs
+
+    mov ax, 0x10     ; Cargar selector de datos del Kernel
+    mov ds, ax
+    mov es, ax
+
+    push esp         ; Pasa el puntero a los registros al C
+    call syscall_handler
+    add esp, 4       ; Limpia el argumento
+
+    pop gs           ; Restaura en orden inverso exacto
+    pop fs
+    pop es
+    pop ds
+    popa
+    iret             ; Vuelve a la Shell

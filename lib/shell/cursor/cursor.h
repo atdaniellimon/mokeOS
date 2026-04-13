@@ -1,7 +1,11 @@
-#ifndef CURSORS_H
-#define CURSORS_H
+#ifndef CURSOR_H
+#define CURSOR_H
 
-#include "../../../lib/stdint/types.h"
+#include "../../stdint/types.h"
+
+/*
+	Cursor made & designed by Daniel Limón
+*/
 
 static uint8_t mouse_default_design[16][16] = {
     {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -59,5 +63,7 @@ static uint8_t mouse_pointer_design[16][16] = {
     {0,0,0,1,2,2,2,2,2,2,2,2,2,1,0,0},
     {0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0}
 };
+
+void draw_hardware_cursor(int x, int y);
 
 #endif

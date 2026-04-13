@@ -1,4 +1,4 @@
-#ifndef APPSINSTANCE_H
+#ifndef APPS_INSTANCE_H
 #define APPS_INSTANCE_H
 
 #include "../stdint/types.h"

@@ -1,4 +1,7 @@
-#mokeOS beta!!
+# mokeOS Compiler
+# Version 1.0
+# Made by Daniel Limon & u/codeasm
+# See more atdaniellimon.github.io
 
 UNAME_S := $(shell uname -s 2>/dev/null || echo Unknown)
 
@@ -32,28 +35,31 @@ AS := nasm
 
 CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-OBJS = boot.o 						\
-       kernel.o 					\
-	   lib/string/string.o  		\
-	   lib/shell/shell.o 			\
-	   lib/shell/terminal.o 		\
-	   lib/timer/timer.o 			\
-	   lib/date/date.o 				\
-	   lib/mokeUI/import.o			\
-	   lib/malloc/mem.o				\
-	   drivers/hardware/hardware.o 	\
-	   drivers/vbe/vbe.o 			\
+OBJS = boot.o 				\
+       kernel.o 				\
+	lib/date/date.o 			\
+	lib/malloc/mem.o			\
+	lib/timer/timer.o 			\
+	lib/shell/shell.o 			\
+	lib/string/string.o  		\
+	lib/shell/terminal.o 		\
+	lib/kernel/syscalls.o 		\
+	lib/shell/cursor/cursor.o 		\
+	lib/kernel/graphics/picasso.o 	\
+	drivers/vbe/vbe.o 			\
        drivers/vbe/font.o 			\
-	   drivers/mouse/ps2.o 			\
-	   drivers/screen/screen.o 		\
-	   drivers/keyboard/keyboard.o 	\
-	   arch/i386/gdt.o 				\
-	   arch/i386/gdt_asm.o			\
-	   arch/i386/idt.o 				\
-       arch/i386/idt_asm.o 			\
-	   arch/i386/io.o				\
-	   debug/mfs/moke.o
-
+	drivers/mouse/ps2.o 			\
+	drivers/screen/screen.o 		\
+	drivers/hardware/hardware.o 	\
+	drivers/keyboard/keyboard.o 	\
+	arch/i386/io.o			\
+	arch/i386/gdt.o 			\
+	arch/i386/idt.o 			\
+       arch/i386/gdt_asm.o			\
+	arch/i386/idt_asm.o 			\
+	debug/mfs/moke.o			\
+	debug/MokeSDK/ui.o
+	
 OUTPUT = mokeos.bin
 
 all: $(OUTPUT)

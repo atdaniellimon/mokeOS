@@ -1,3 +1,8 @@
+; mokeOS boot
+; Version Nebula
+; Made by Daniel Limon for MokeOS
+; See more atdaniellimon.github.io
+
 MBOOT_MAGIC    equ 0x1BADB002
 MBOOT_FLAGS    equ 0x00000007
 MBOOT_CHECKSUM equ -(MBOOT_MAGIC + MBOOT_FLAGS)
@@ -34,3 +39,5 @@ align 16
 stack_bottom:
     resb 16384
 stack_top:
+
+global stack_top
