@@ -2,8 +2,6 @@
 
 **A bare-metal graphical operating system with a window manager, filesystem, and app support — built entirely from scratch in C and Assembly.**
 
-![mokeOS Screenshot](screenshot.png)
-
 ## Overview
 
 mokeOS is a 32-bit x86 operating system that boots directly on real hardware or emulators (QEMU, Bochs). It features a fully functional GUI desktop environment with window management, a custom filesystem, dynamic font rendering, and the ability to load and run user applications — all without any external dependencies.
