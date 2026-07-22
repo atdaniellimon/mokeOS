@@ -33,7 +33,7 @@ For the best experience, we recommend booting the ISO using **QEMU** or **Virtua
 
 **Quick start with QEMU:**
 ```bash
-qemu-system-x86_64 -m 2G -bios /path/to/galileo.iso -cdrom galileo.iso -vga virtio
+qemu-system-x86_64 -m 2G -bios /path/to/OVMF.fd -cdrom galileo.iso -vga virtio
 ```
 
 ### Running on Bare Metal
