@@ -8,7 +8,7 @@ Galileo OS is a proprietary operating system built from the ground up to explore
 
 ---
 
-## ✨ Core Highlights
+## Features
 
 - **Direct Framebuffer Architecture**  
   Galileo bypasses heavy traditional display servers (like X11 or Wayland). Its custom `Picasso` compositor communicates directly with the hardware framebuffer, ensuring ultra-low latency and immediate pixel delivery.
@@ -24,7 +24,7 @@ Galileo OS is a proprietary operating system built from the ground up to explore
 
 ---
 
-## 🚀 Getting Started
+## How do I boot it?
 
 Galileo OS is distributed exclusively as a pre-compiled, bootable ISO image. 
 
@@ -44,5 +44,5 @@ qemu-system-x86_64 -m 2G -bios /path/to/galileo.iso -cdrom galileo.iso -vga virt
 ---
 
 <div align="center">
-  <sub>Built with precision. Designed by [Daniel Limón](https://daniellimon.uk/)</sub>
+  <sub>Built with precision. Designed by Daniel Limón</sub>
 </div>
